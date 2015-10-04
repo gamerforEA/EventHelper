@@ -10,6 +10,7 @@ import cpw.mods.fml.common.FMLCommonHandler;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.projectile.EntityThrowable;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
 import net.minecraftforge.common.config.Configuration;
@@ -46,18 +47,19 @@ public final class FastUtils
 
 	public static final FakePlayer getFake(World world, GameProfile profile)
 	{
-		return getFake(world, FakePlayerFactory.get((WorldServer) world, profile));
+		MinecraftServer server = FMLCommonHandler.instance().getMinecraftServerInstance();
+		return getFake(world, FakePlayerFactory.get((WorldServer) (world == null ? server.getEntityWorld() : world), profile));
 	}
 
-	public static final EntityPlayer getThrowerPlayer(EntityThrowable entity, GameProfile modFakeProfile)
+	public static final EntityPlayer getThrowerPlayer(EntityThrowable entity, FakePlayer modFake)
 	{
 		EntityLivingBase thrower = entity.getThrower();
-		return thrower instanceof EntityPlayer ? (EntityPlayer) thrower : getFake(entity.worldObj, modFakeProfile);
+		return thrower instanceof EntityPlayer ? (EntityPlayer) thrower : getFake(entity.worldObj, modFake);
 	}
 
-	public static final EntityLivingBase getThrower(EntityThrowable entity, GameProfile modFakeProfile)
+	public static final EntityLivingBase getThrower(EntityThrowable entity, FakePlayer modFake)
 	{
 		EntityLivingBase thrower = entity.getThrower();
-		return thrower != null ? thrower : getFake(entity.worldObj, modFakeProfile);
+		return thrower != null ? thrower : getFake(entity.worldObj, modFake);
 	}
 }

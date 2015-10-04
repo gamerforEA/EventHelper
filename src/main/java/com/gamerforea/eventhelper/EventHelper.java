@@ -24,7 +24,7 @@ import cpw.mods.fml.relauncher.SideOnly;
 import net.minecraftforge.common.config.Configuration;
 
 @SideOnly(Side.SERVER)
-@Mod(modid = "EventHelper", name = "EventHelper", version = "1.0", acceptableRemoteVersions = "*")
+@Mod(modid = "EventHelper", name = "EventHelper", version = "1.1", acceptableRemoteVersions = "*")
 public final class EventHelper
 {
 	public static final File cfgDir = new File(Loader.instance().getConfigDir(), "Events");
