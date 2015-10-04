@@ -11,13 +11,21 @@ import net.minecraftforge.common.util.FakePlayer;
 
 public abstract class FakePlayerContainer
 {
-	private final FakePlayer modFake;
-	private FakePlayer player;
+	private final GameProfile modFakeProfile;
+	private FakePlayer modFake;
+
 	public GameProfile profile;
+	private FakePlayer player;
 
 	protected FakePlayerContainer(FakePlayer modFake)
 	{
+		this.modFakeProfile = modFake.getGameProfile();
 		this.modFake = modFake;
+	}
+
+	protected FakePlayerContainer(GameProfile modFakeProfile)
+	{
+		this.modFakeProfile = modFakeProfile;
 	}
 
 	public abstract World getWorld();
@@ -28,8 +36,10 @@ public abstract class FakePlayerContainer
 			return FastUtils.getFake(this.getWorld(), this.player);
 		else if (this.profile != null)
 			return this.player = FastUtils.getFake(this.getWorld(), this.profile);
-		else
+		else if (this.modFake != null)
 			return FastUtils.getFake(this.getWorld(), this.modFake);
+		else
+			return this.modFake = FastUtils.getFake(this.getWorld(), this.modFakeProfile);
 	}
 
 	public final void writeToNBT(NBTTagCompound nbt)

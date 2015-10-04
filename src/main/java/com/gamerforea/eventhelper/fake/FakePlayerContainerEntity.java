@@ -1,5 +1,7 @@
 package com.gamerforea.eventhelper.fake;
 
+import com.mojang.authlib.GameProfile;
+
 import net.minecraft.entity.Entity;
 import net.minecraft.world.World;
 import net.minecraftforge.common.util.FakePlayer;
@@ -11,6 +13,12 @@ public final class FakePlayerContainerEntity extends FakePlayerContainer
 	public FakePlayerContainerEntity(FakePlayer modFake, Entity entity)
 	{
 		super(modFake);
+		this.entity = entity;
+	}
+
+	public FakePlayerContainerEntity(GameProfile modFakeProfile, Entity entity)
+	{
+		super(modFakeProfile);
 		this.entity = entity;
 	}
 

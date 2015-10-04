@@ -1,5 +1,7 @@
 package com.gamerforea.eventhelper.fake;
 
+import com.mojang.authlib.GameProfile;
+
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.world.World;
 import net.minecraftforge.common.util.FakePlayer;
@@ -11,6 +13,12 @@ public final class FakePlayerContainerTileEntity extends FakePlayerContainer
 	public FakePlayerContainerTileEntity(FakePlayer modFake, TileEntity tile)
 	{
 		super(modFake);
+		this.tile = tile;
+	}
+
+	public FakePlayerContainerTileEntity(GameProfile modFakeProfile, TileEntity tile)
+	{
+		super(modFakeProfile);
 		this.tile = tile;
 	}
 
