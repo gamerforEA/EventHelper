@@ -57,9 +57,21 @@ public final class FastUtils
 		return thrower instanceof EntityPlayer ? (EntityPlayer) thrower : getFake(entity.worldObj, modFake);
 	}
 
+	public static final EntityPlayer getThrowerPlayer(EntityThrowable entity, GameProfile modFakeProfile)
+	{
+		EntityLivingBase thrower = entity.getThrower();
+		return thrower instanceof EntityPlayer ? (EntityPlayer) thrower : getFake(entity.worldObj, modFakeProfile);
+	}
+
 	public static final EntityLivingBase getThrower(EntityThrowable entity, FakePlayer modFake)
 	{
 		EntityLivingBase thrower = entity.getThrower();
 		return thrower != null ? thrower : getFake(entity.worldObj, modFake);
+	}
+
+	public static final EntityLivingBase getThrower(EntityThrowable entity, GameProfile modFakeProfile)
+	{
+		EntityLivingBase thrower = entity.getThrower();
+		return thrower != null ? thrower : getFake(entity.worldObj, modFakeProfile);
 	}
 }
