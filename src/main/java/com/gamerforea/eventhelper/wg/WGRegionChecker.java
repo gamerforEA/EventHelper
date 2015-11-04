@@ -27,7 +27,7 @@ public final class WGRegionChecker
 		}
 		catch (Throwable throwable)
 		{
-			throw new RuntimeException("Failed injecting WGRegionCheckerInj.isInPrivateInj() method!", throwable);
+			throw new RuntimeException("Failed injecting WGRegionChecker$Inj.isInPrivateInj() method!", throwable);
 		}
 	}
 

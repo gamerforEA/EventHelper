@@ -5,6 +5,7 @@ import java.lang.reflect.Method;
 import org.bukkit.Bukkit;
 
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.world.World;
 
 public final class ConvertUtils
@@ -14,6 +15,11 @@ public final class ConvertUtils
 	public static final org.bukkit.entity.Entity toBukkitEntity(Entity entity) throws Exception
 	{
 		return (org.bukkit.entity.Entity) getBukkitEntity.invoke(entity);
+	}
+
+	public static final org.bukkit.entity.Player toBukkitEntity(EntityPlayer player) throws Exception
+	{
+		return (org.bukkit.entity.Player) getBukkitEntity.invoke(player);
 	}
 
 	public static final org.bukkit.World toBukkitWorld(World world)
