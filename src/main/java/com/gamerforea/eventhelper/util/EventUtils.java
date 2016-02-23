@@ -1,100 +1,127 @@
 package com.gamerforea.eventhelper.util;
 
 import static com.gamerforea.eventhelper.util.ConvertUtils.toBukkitEntity;
+import static com.gamerforea.eventhelper.util.ConvertUtils.toBukkitFace;
+import static com.gamerforea.eventhelper.util.ConvertUtils.toBukkitItemStackMirror;
 import static com.gamerforea.eventhelper.util.ConvertUtils.toBukkitWorld;
 
+import org.bukkit.entity.Player;
+import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockBreakEvent;
+import org.bukkit.event.block.BlockFromToEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent.DamageCause;
+import org.bukkit.event.player.PlayerInteractEvent;
 
 import com.gamerforea.eventhelper.EventHelper;
-import com.gamerforea.eventhelper.wg.WGFastEvents;
 import com.gamerforea.eventhelper.wg.WGRegionChecker;
 
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.item.ItemStack;
 import net.minecraft.util.MathHelper;
 import net.minecraft.world.World;
+import net.minecraftforge.common.util.ForgeDirection;
 
 public final class EventUtils
 {
 	public static final boolean cantBreak(EntityPlayer player, int x, int y, int z)
 	{
-		if (!EventHelper.fastEvents)
-			try
-			{
-				BlockBreakEvent event = new BlockBreakEvent(toBukkitWorld(player.worldObj).getBlockAt(x, y, z), toBukkitEntity(player));
-				EventHelper.callEvent(event);
-				return event.isCancelled();
-			}
-			catch (Throwable throwable)
-			{
-				System.err.println(String.format("Failed call BlockBreakEvent: [Player: %s, X:%d, Y:%d, Z:%d]", player.toString(), x, y, z));
-				if (EventHelper.debug)
-					throwable.printStackTrace();
-				return true;
-			}
-		else
-			try
-			{
-				return !WGFastEvents.hasAccess(toBukkitEntity(player), x, y, z, false);
-			}
-			catch (Throwable throwable)
-			{
-				System.err.println(String.format("Failed use fast hasAccess(): [Player: %s, X:%d, Y:%d, Z:%d]", player.toString(), x, y, z));
-				if (EventHelper.debug)
-					throwable.printStackTrace();
-				return true;
-			}
+		try
+		{
+			Player bPlayer = toBukkitEntity(player);
+			BlockBreakEvent event = new BlockBreakEvent(bPlayer.getWorld().getBlockAt(x, y, z), bPlayer);
+			EventHelper.callEvent(event);
+			return event.isCancelled();
+		}
+		catch (Throwable throwable)
+		{
+			err("Failed call BlockBreakEvent: [Player: %s, X:%d, Y:%d, Z:%d]", String.valueOf(player), x, y, z);
+			if (EventHelper.debug)
+				throwable.printStackTrace();
+			return true;
+		}
 	}
 
 	public static final boolean cantDamage(Entity damager, Entity damagee)
 	{
-		if (!EventHelper.fastEvents)
-			try
-			{
-				EntityDamageByEntityEvent event = new EntityDamageByEntityEvent(toBukkitEntity(damager), toBukkitEntity(damagee), DamageCause.ENTITY_ATTACK, 0D);
-				EventHelper.callEvent(event);
-				return event.isCancelled();
-			}
-			catch (Throwable throwable)
-			{
-				System.err.println(String.format("Failed call EntityDamageByEntityEvent: [Damager: %s, Damagee: %s]", damager.toString(), damagee.toString()));
-				if (EventHelper.debug)
-					throwable.printStackTrace();
-				return true;
-			}
-		else
-			try
-			{
-				if (damager instanceof EntityPlayer)
-				{
-					int x = MathHelper.floor_double(damagee.posX);
-					int y = MathHelper.floor_double(damagee.posY);
-					int z = MathHelper.floor_double(damagee.posZ);
-					return !WGFastEvents.hasAccess(toBukkitEntity((EntityPlayer) damager), x, y, z, true);
-				}
-				else
-					return isInPrivate(damagee);
-			}
-			catch (Throwable throwable)
-			{
-				System.err.println(String.format("Failed use fast hasAccess(): [Damager: %s, Damagee: %s]", damager.toString(), damagee.toString()));
-				if (EventHelper.debug)
-					throwable.printStackTrace();
-				return true;
-			}
+		try
+		{
+			EntityDamageByEntityEvent event = new EntityDamageByEntityEvent(toBukkitEntity(damager), toBukkitEntity(damagee), DamageCause.ENTITY_ATTACK, 0D);
+			EventHelper.callEvent(event);
+			return event.isCancelled();
+		}
+		catch (Throwable throwable)
+		{
+			err("Failed call EntityDamageByEntityEvent: [Damager: %s, Damagee: %s]", String.valueOf(damager), String.valueOf(damagee));
+			if (EventHelper.debug)
+				throwable.printStackTrace();
+			return true;
+		}
+	}
+
+	public static final boolean cantInteract(EntityPlayer player, ItemStack stack, int x, int y, int z, ForgeDirection side)
+	{
+		try
+		{
+			org.bukkit.entity.Player bPlayer = toBukkitEntity(player);
+			PlayerInteractEvent event = new PlayerInteractEvent(bPlayer, Action.RIGHT_CLICK_BLOCK, toBukkitItemStackMirror(stack), bPlayer.getWorld().getBlockAt(x, y, z), toBukkitFace(side));
+			return event.isCancelled();
+		}
+		catch (Throwable throwable)
+		{
+			err("Failed call PlayerInteractEvent: [Player: %s, Item: %s, X:%d, Y:%d, Z:%d, Side: %s]", String.valueOf(player), String.valueOf(stack), x, y, z, String.valueOf(side));
+			if (EventHelper.debug)
+				throwable.printStackTrace();
+			return true;
+		}
+	}
+
+	public static final boolean cantFromTo(World world, int fromX, int fromY, int fromZ, int toX, int toY, int toZ)
+	{
+		try
+		{
+			org.bukkit.World bWorld = toBukkitWorld(world);
+			BlockFromToEvent event = new BlockFromToEvent(bWorld.getBlockAt(fromX, fromY, fromZ), bWorld.getBlockAt(toX, toY, toZ));
+			EventHelper.callEvent(event);
+			return event.isCancelled();
+		}
+		catch (Throwable throwable)
+		{
+			err("Failed call BlockFromToEvent: [FromX: %d, FromY: %d, FromZ: %d, ToX: %d, ToY: %d, ToZ: %d]", fromX, fromY, fromZ, toX, toY, toZ);
+			if (EventHelper.debug)
+				throwable.printStackTrace();
+			return true;
+		}
+	}
+
+	public static final boolean cantFromTo(World world, int fromX, int fromY, int fromZ, ForgeDirection direction)
+	{
+		try
+		{
+			org.bukkit.World bWorld = toBukkitWorld(world);
+			BlockFromToEvent event = new BlockFromToEvent(bWorld.getBlockAt(fromX, fromY, fromZ), toBukkitFace(direction));
+			EventHelper.callEvent(event);
+			return event.isCancelled();
+		}
+		catch (Throwable throwable)
+		{
+			err("Failed call BlockFromToEvent: [FromX: %d, FromY: %d, FromZ: %d, Direction: %s]", fromX, fromY, fromZ, String.valueOf(direction));
+			if (EventHelper.debug)
+				throwable.printStackTrace();
+			return true;
+		}
 	}
 
 	public static final boolean isInPrivate(World world, int x, int y, int z)
 	{
 		try
 		{
-			return WGRegionChecker.isInPrivate(ConvertUtils.toBukkitWorld(world), x, y, z);
+			return WGRegionChecker.isInPrivate(toBukkitWorld(world), x, y, z);
 		}
 		catch (Throwable throwable)
 		{
-			System.err.println(String.format("Failed check private: [World: %s, X: %d, Y: %d, Z: %d]", world.getWorldInfo().getWorldName(), x, y, z));
+			err("Failed check private: [World: %s, X: %d, Y: %d, Z: %d]", world.getWorldInfo().getWorldName(), x, y, z);
 			if (EventHelper.debug)
 				throwable.printStackTrace();
 			return true;
@@ -107,5 +134,10 @@ public final class EventUtils
 		int y = MathHelper.floor_double(entity.posY);
 		int z = MathHelper.floor_double(entity.posZ);
 		return isInPrivate(entity.worldObj, x, y, z);
+	}
+
+	private static final void err(String format, Object... args)
+	{
+		System.err.println(String.format(format, args));
 	}
 }

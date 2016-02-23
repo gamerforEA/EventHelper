@@ -1,7 +1,6 @@
 package com.gamerforea.eventhelper.util;
 
 import java.io.File;
-import java.util.List;
 
 import com.gamerforea.eventhelper.EventHelper;
 import com.mojang.authlib.GameProfile;
@@ -31,8 +30,7 @@ public final class FastUtils
 		if (player instanceof FakePlayer)
 			return true;
 
-		List<EntityPlayer> playersOnline = FMLCommonHandler.instance().getMinecraftServerInstance().getConfigurationManager().playerEntityList;
-		for (EntityPlayer playerOnline : playersOnline)
+		for (EntityPlayer playerOnline : (Iterable<EntityPlayer>) getServer().getConfigurationManager().playerEntityList)
 			if (playerOnline.equals(player))
 				return true;
 
@@ -41,37 +39,54 @@ public final class FastUtils
 
 	public static final FakePlayer getFake(World world, FakePlayer fake)
 	{
-		fake.worldObj = world;
+		fake.worldObj = world == null ? getEntityWorld() : world;
 		return fake;
 	}
 
 	public static final FakePlayer getFake(World world, GameProfile profile)
 	{
-		MinecraftServer server = FMLCommonHandler.instance().getMinecraftServerInstance();
-		return getFake(world, FakePlayerFactory.get((WorldServer) (world == null ? server.getEntityWorld() : world), profile));
+		return getFake(world, FakePlayerFactory.get((WorldServer) (world == null ? getEntityWorld() : world), profile));
+	}
+
+	public static final EntityPlayer getLivingPlayer(EntityLivingBase entity, FakePlayer modFake)
+	{
+		return entity instanceof EntityPlayer ? (EntityPlayer) entity : getFake(entity == null ? null : entity.worldObj, modFake);
+	}
+
+	public static final EntityPlayer getLivingPlayer(EntityLivingBase entity, GameProfile modFakeProfile)
+	{
+		return entity instanceof EntityPlayer ? (EntityPlayer) entity : getFake(entity == null ? null : entity.worldObj, modFakeProfile);
 	}
 
 	public static final EntityPlayer getThrowerPlayer(EntityThrowable entity, FakePlayer modFake)
 	{
-		EntityLivingBase thrower = entity.getThrower();
-		return thrower instanceof EntityPlayer ? (EntityPlayer) thrower : getFake(entity.worldObj, modFake);
+		return getLivingPlayer(entity.getThrower(), modFake);
 	}
 
 	public static final EntityPlayer getThrowerPlayer(EntityThrowable entity, GameProfile modFakeProfile)
 	{
-		EntityLivingBase thrower = entity.getThrower();
-		return thrower instanceof EntityPlayer ? (EntityPlayer) thrower : getFake(entity.worldObj, modFakeProfile);
+		return getLivingPlayer(entity.getThrower(), modFakeProfile);
 	}
 
 	public static final EntityLivingBase getThrower(EntityThrowable entity, FakePlayer modFake)
 	{
 		EntityLivingBase thrower = entity.getThrower();
-		return thrower != null ? thrower : getFake(entity.worldObj, modFake);
+		return thrower != null ? thrower : getFake(entity == null ? null : entity.worldObj, modFake);
 	}
 
 	public static final EntityLivingBase getThrower(EntityThrowable entity, GameProfile modFakeProfile)
 	{
 		EntityLivingBase thrower = entity.getThrower();
-		return thrower != null ? thrower : getFake(entity.worldObj, modFakeProfile);
+		return thrower != null ? thrower : getFake(entity == null ? null : entity.worldObj, modFakeProfile);
+	}
+
+	private static final MinecraftServer getServer()
+	{
+		return FMLCommonHandler.instance().getMinecraftServerInstance();
+	}
+
+	private static final World getEntityWorld()
+	{
+		return getServer().getEntityWorld();
 	}
 }

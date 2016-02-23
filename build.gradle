@@ -15,21 +15,30 @@ buildscript {
 	}
 }
 
+repositories {
+	flatDir {
+		dirs 'lib'
+	}
+}
+
 apply plugin: 'forge'
 
 [compileJava, compileTestJava]*.options*.encoding = 'UTF-8'
 
-version = "1.4"
+version = "1.5"
 group= "com.gamerforea"
 archivesBaseName = "EventHelper"
 
 minecraft {
-	version = "1.7.10-10.13.4.1492-1.7.10"
+	version = "1.7.10-10.13.4.1614-1.7.10"
 	runDir = "eclipse"
+	replace "@VERSION@", project.version
 }
 
 dependencies {
-	compile fileTree(dir: 'lib', include: '*.jar')
+	compile name: 'bukkit-1.7.10'
+	compile name: 'worldedit-6.1'
+	compile name: 'worldguard-6.1'
 }
 
 task devJar(type: Jar) {
@@ -37,6 +46,12 @@ task devJar(type: Jar) {
 	from sourceSets.main.output
 }
 
+task sourcesJar(type: Jar) {
+	classifier = 'sources'
+	from sourceSets.main.allSource
+}
+
 artifacts {
 	archives devJar
+	archives sourcesJar
 }
