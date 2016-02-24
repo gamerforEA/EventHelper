@@ -66,6 +66,7 @@ public final class EventUtils
 		{
 			org.bukkit.entity.Player bPlayer = toBukkitEntity(player);
 			PlayerInteractEvent event = new PlayerInteractEvent(bPlayer, Action.RIGHT_CLICK_BLOCK, toBukkitItemStackMirror(stack), bPlayer.getWorld().getBlockAt(x, y, z), toBukkitFace(side));
+			EventHelper.callEvent(event);
 			return event.isCancelled();
 		}
 		catch (Throwable throwable)
