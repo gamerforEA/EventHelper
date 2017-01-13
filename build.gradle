@@ -1,44 +1,39 @@
 buildscript {
 	repositories {
-		mavenCentral()
-		maven {
-			name = "forge"
-			url = "http://files.minecraftforge.net/maven"
-		}
-		maven {
-			name = "sonatype"
-			url = "https://oss.sonatype.org/content/repositories/snapshots/"
-		}
+		jcenter()
+		maven { url = "http://files.minecraftforge.net/maven" }
 	}
 	dependencies {
-		classpath 'net.minecraftforge.gradle:ForgeGradle:1.2-SNAPSHOT'
+		classpath 'net.minecraftforge.gradle:ForgeGradle:2.2-SNAPSHOT'
 	}
 }
+apply plugin: 'net.minecraftforge.gradle.forge'
 
 repositories {
-	flatDir {
-		dirs 'lib'
-	}
+	maven {
+        name = 'sponge'
+        url = 'http://repo.spongepowered.org/maven'
+    }
 }
 
-apply plugin: 'forge'
-
-[compileJava, compileTestJava]*.options*.encoding = 'UTF-8'
-
-version = "1.6"
+version = "1.11.2-2.0"
 group= "com.gamerforea"
 archivesBaseName = "EventHelper"
 
+sourceCompatibility = targetCompatibility = "1.6"
+compileJava {
+	sourceCompatibility = targetCompatibility = "1.6"
+}
+
 minecraft {
-	version = "1.7.10-10.13.4.1614-1.7.10"
-	runDir = "eclipse"
+	version = "1.11.2-13.20.0.2214"
+	runDir = "run"
+	mappings = "snapshot_20161220"
 	replace "@VERSION@", project.version
 }
 
 dependencies {
-	compile name: 'bukkit-1.7.10'
-	compile name: 'worldedit-6.1'
-	compile name: 'worldguard-6.1'
+	compile 'org.spongepowered:spongeapi:6.0.0-SNAPSHOT'
 }
 
 task devJar(type: Jar) {
@@ -55,3 +50,4 @@ artifacts {
 	archives devJar
 	archives sourcesJar
 }
+

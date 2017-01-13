@@ -4,17 +4,10 @@ import com.mojang.authlib.GameProfile;
 
 import net.minecraft.entity.Entity;
 import net.minecraft.world.World;
-import net.minecraftforge.common.util.FakePlayer;
 
 public final class FakePlayerContainerEntity extends FakePlayerContainer
 {
 	private final Entity entity;
-
-	public FakePlayerContainerEntity(FakePlayer modFake, Entity entity)
-	{
-		super(modFake);
-		this.entity = entity;
-	}
 
 	public FakePlayerContainerEntity(GameProfile modFakeProfile, Entity entity)
 	{
@@ -25,6 +18,6 @@ public final class FakePlayerContainerEntity extends FakePlayerContainer
 	@Override
 	public final World getWorld()
 	{
-		return this.entity.worldObj;
+		return this.entity.world;
 	}
 }

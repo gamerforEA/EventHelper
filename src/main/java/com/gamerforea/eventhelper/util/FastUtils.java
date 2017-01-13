@@ -5,7 +5,6 @@ import java.io.File;
 import com.gamerforea.eventhelper.EventHelper;
 import com.mojang.authlib.GameProfile;
 
-import cpw.mods.fml.common.FMLCommonHandler;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.projectile.EntityThrowable;
@@ -15,6 +14,7 @@ import net.minecraft.world.WorldServer;
 import net.minecraftforge.common.config.Configuration;
 import net.minecraftforge.common.util.FakePlayer;
 import net.minecraftforge.common.util.FakePlayerFactory;
+import net.minecraftforge.fml.common.FMLCommonHandler;
 
 public final class FastUtils
 {
@@ -30,7 +30,7 @@ public final class FastUtils
 		if (player instanceof FakePlayer)
 			return true;
 
-		for (EntityPlayer playerOnline : (Iterable<EntityPlayer>) getServer().getConfigurationManager().playerEntityList)
+		for (EntityPlayer playerOnline : getServer().getPlayerList().getPlayers())
 			if (playerOnline.equals(player))
 				return true;
 
@@ -39,7 +39,7 @@ public final class FastUtils
 
 	public static final FakePlayer getFake(World world, FakePlayer fake)
 	{
-		fake.worldObj = world == null ? getEntityWorld() : world;
+		fake.world = world == null ? getEntityWorld() : world;
 		return fake;
 	}
 
@@ -50,12 +50,12 @@ public final class FastUtils
 
 	public static final EntityPlayer getLivingPlayer(EntityLivingBase entity, FakePlayer modFake)
 	{
-		return entity instanceof EntityPlayer ? (EntityPlayer) entity : getFake(entity == null ? null : entity.worldObj, modFake);
+		return entity instanceof EntityPlayer ? (EntityPlayer) entity : getFake(entity == null ? null : entity.world, modFake);
 	}
 
 	public static final EntityPlayer getLivingPlayer(EntityLivingBase entity, GameProfile modFakeProfile)
 	{
-		return entity instanceof EntityPlayer ? (EntityPlayer) entity : getFake(entity == null ? null : entity.worldObj, modFakeProfile);
+		return entity instanceof EntityPlayer ? (EntityPlayer) entity : getFake(entity == null ? null : entity.world, modFakeProfile);
 	}
 
 	public static final EntityPlayer getThrowerPlayer(EntityThrowable entity, FakePlayer modFake)
@@ -71,13 +71,13 @@ public final class FastUtils
 	public static final EntityLivingBase getThrower(EntityThrowable entity, FakePlayer modFake)
 	{
 		EntityLivingBase thrower = entity.getThrower();
-		return thrower != null ? thrower : getFake(entity == null ? null : entity.worldObj, modFake);
+		return thrower != null ? thrower : getFake(entity == null ? null : entity.world, modFake);
 	}
 
 	public static final EntityLivingBase getThrower(EntityThrowable entity, GameProfile modFakeProfile)
 	{
 		EntityLivingBase thrower = entity.getThrower();
-		return thrower != null ? thrower : getFake(entity == null ? null : entity.worldObj, modFakeProfile);
+		return thrower != null ? thrower : getFake(entity == null ? null : entity.world, modFakeProfile);
 	}
 
 	private static final MinecraftServer getServer()

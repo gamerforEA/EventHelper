@@ -1,144 +1,105 @@
 package com.gamerforea.eventhelper.util;
 
-import static com.gamerforea.eventhelper.util.ConvertUtils.toBukkitEntity;
-import static com.gamerforea.eventhelper.util.ConvertUtils.toBukkitFace;
-import static com.gamerforea.eventhelper.util.ConvertUtils.toBukkitItemStackMirror;
-import static com.gamerforea.eventhelper.util.ConvertUtils.toBukkitWorld;
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
 
-import org.bukkit.entity.Player;
-import org.bukkit.event.block.Action;
-import org.bukkit.event.block.BlockBreakEvent;
-import org.bukkit.event.block.BlockFromToEvent;
-import org.bukkit.event.entity.EntityDamageByEntityEvent;
-import org.bukkit.event.entity.EntityDamageEvent.DamageCause;
-import org.bukkit.event.player.PlayerInteractEvent;
+import org.spongepowered.api.Sponge;
+import org.spongepowered.api.block.BlockSnapshot;
+import org.spongepowered.api.data.Transaction;
+import org.spongepowered.api.data.type.HandType;
+import org.spongepowered.api.event.Event;
+import org.spongepowered.api.event.SpongeEventFactory;
+import org.spongepowered.api.event.cause.Cause;
+import org.spongepowered.api.util.Direction;
 
+import com.flowpowered.math.vector.Vector3d;
 import com.gamerforea.eventhelper.EventHelper;
-import com.gamerforea.eventhelper.wg.WGRegionChecker;
 
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.item.ItemStack;
-import net.minecraft.util.MathHelper;
-import net.minecraft.world.World;
-import net.minecraftforge.common.util.ForgeDirection;
+import net.minecraft.util.EnumFacing;
+import net.minecraft.util.EnumHand;
+import net.minecraft.util.math.BlockPos;
 
 public final class EventUtils
 {
-	public static final boolean cantBreak(EntityPlayer player, int x, int y, int z)
+	public static final boolean cantBreak(EntityPlayer player, BlockPos pos)
 	{
 		try
 		{
-			Player bPlayer = toBukkitEntity(player);
-			BlockBreakEvent event = new BlockBreakEvent(bPlayer.getWorld().getBlockAt(x, y, z), bPlayer);
-			EventHelper.callEvent(event);
-			return event.isCancelled();
+			Cause cause = SpongeUtils.getCause(player);
+			org.spongepowered.api.world.World world = SpongeUtils.getWorld(player.world);
+			BlockSnapshot original = world.createSnapshot(pos.getX(), pos.getY(), pos.getZ());
+			Transaction<BlockSnapshot> transaction = new Transaction<BlockSnapshot>(original, BlockSnapshot.NONE);
+			transaction.setCustom(SpongeUtils.getAirSnapshot(world, pos));
+			List<Transaction<BlockSnapshot>> transactions = Collections.singletonList(transaction);
+
+			Event event = SpongeEventFactory.createChangeBlockEventBreak(cause, world, transactions);
+			return Sponge.getEventManager().post(event);
 		}
 		catch (Throwable throwable)
 		{
-			err("Failed call BlockBreakEvent: [Player: %s, X:%d, Y:%d, Z:%d]", String.valueOf(player), x, y, z);
+			err("Failed call ChangeBlockEvent.Break: [Player: {}, Pos: {}]", player, pos);
 			if (EventHelper.debug)
 				throwable.printStackTrace();
 			return true;
 		}
 	}
 
-	public static final boolean cantDamage(Entity damager, Entity damagee)
+	public static final boolean cantDamage(EntityPlayer player, Entity target)
 	{
 		try
 		{
-			EntityDamageByEntityEvent event = new EntityDamageByEntityEvent(toBukkitEntity(damager), toBukkitEntity(damagee), DamageCause.ENTITY_ATTACK, 0D);
-			EventHelper.callEvent(event);
-			return event.isCancelled();
+			Cause cause = SpongeUtils.getCause(player);
+			org.spongepowered.api.entity.Entity targetEntity = (org.spongepowered.api.entity.Entity) target;
+
+			Event event = SpongeEventFactory.createAttackEntityEvent(cause, Collections.EMPTY_LIST, targetEntity, 0, 0);
+			return Sponge.getEventManager().post(event);
 		}
 		catch (Throwable throwable)
 		{
-			err("Failed call EntityDamageByEntityEvent: [Damager: %s, Damagee: %s]", String.valueOf(damager), String.valueOf(damagee));
+			err("Failed call AttackEntityEvent: [Player: {}, Target: {}]", player, target);
 			if (EventHelper.debug)
 				throwable.printStackTrace();
 			return true;
 		}
 	}
 
-	public static final boolean cantInteract(EntityPlayer player, ItemStack stack, int x, int y, int z, ForgeDirection side)
+	public static final boolean cantInteract(EntityPlayer player, EnumHand hand, BlockPos pos, EnumFacing side)
 	{
 		try
 		{
-			org.bukkit.entity.Player bPlayer = toBukkitEntity(player);
-			PlayerInteractEvent event = new PlayerInteractEvent(bPlayer, Action.RIGHT_CLICK_BLOCK, toBukkitItemStackMirror(stack), bPlayer.getWorld().getBlockAt(x, y, z), toBukkitFace(side));
-			EventHelper.callEvent(event);
-			return event.isCancelled();
+			Cause cause = SpongeUtils.getCause(player);
+			HandType handType = SpongeUtils.getHandType(hand);
+			Optional<Vector3d> interactionPoint = Optional.<Vector3d>empty();
+			org.spongepowered.api.world.World world = SpongeUtils.getWorld(player.world);
+			BlockSnapshot block = world.createSnapshot(pos.getX(), pos.getY(), pos.getZ());
+			Direction direction = SpongeUtils.getDirection(side);
+
+			Event event;
+			switch (hand)
+			{
+				case OFF_HAND:
+					event = SpongeEventFactory.createInteractBlockEventPrimaryOffHand(cause, handType, interactionPoint, block, direction);
+					break;
+				default:
+					event = SpongeEventFactory.createInteractBlockEventPrimaryMainHand(cause, handType, interactionPoint, block, direction);
+					break;
+			}
+			return Sponge.getEventManager().post(event);
 		}
 		catch (Throwable throwable)
 		{
-			err("Failed call PlayerInteractEvent: [Player: %s, Item: %s, X:%d, Y:%d, Z:%d, Side: %s]", String.valueOf(player), String.valueOf(stack), x, y, z, String.valueOf(side));
+			err("Failed call PlayerInteractEvent: [Player: {}, Hand: {}, Pos: {}, Side: {}]", player, hand, pos, side);
 			if (EventHelper.debug)
 				throwable.printStackTrace();
 			return true;
 		}
-	}
-
-	public static final boolean cantFromTo(World world, int fromX, int fromY, int fromZ, int toX, int toY, int toZ)
-	{
-		try
-		{
-			org.bukkit.World bWorld = toBukkitWorld(world);
-			BlockFromToEvent event = new BlockFromToEvent(bWorld.getBlockAt(fromX, fromY, fromZ), bWorld.getBlockAt(toX, toY, toZ));
-			EventHelper.callEvent(event);
-			return event.isCancelled();
-		}
-		catch (Throwable throwable)
-		{
-			err("Failed call BlockFromToEvent: [FromX: %d, FromY: %d, FromZ: %d, ToX: %d, ToY: %d, ToZ: %d]", fromX, fromY, fromZ, toX, toY, toZ);
-			if (EventHelper.debug)
-				throwable.printStackTrace();
-			return true;
-		}
-	}
-
-	public static final boolean cantFromTo(World world, int fromX, int fromY, int fromZ, ForgeDirection direction)
-	{
-		try
-		{
-			org.bukkit.World bWorld = toBukkitWorld(world);
-			BlockFromToEvent event = new BlockFromToEvent(bWorld.getBlockAt(fromX, fromY, fromZ), toBukkitFace(direction));
-			EventHelper.callEvent(event);
-			return event.isCancelled();
-		}
-		catch (Throwable throwable)
-		{
-			err("Failed call BlockFromToEvent: [FromX: %d, FromY: %d, FromZ: %d, Direction: %s]", fromX, fromY, fromZ, String.valueOf(direction));
-			if (EventHelper.debug)
-				throwable.printStackTrace();
-			return true;
-		}
-	}
-
-	public static final boolean isInPrivate(World world, int x, int y, int z)
-	{
-		try
-		{
-			return WGRegionChecker.isInPrivate(toBukkitWorld(world), x, y, z);
-		}
-		catch (Throwable throwable)
-		{
-			err("Failed check private: [World: %s, X: %d, Y: %d, Z: %d]", world.getWorldInfo().getWorldName(), x, y, z);
-			if (EventHelper.debug)
-				throwable.printStackTrace();
-			return true;
-		}
-	}
-
-	public static final boolean isInPrivate(Entity entity)
-	{
-		int x = MathHelper.floor_double(entity.posX);
-		int y = MathHelper.floor_double(entity.posY);
-		int z = MathHelper.floor_double(entity.posZ);
-		return isInPrivate(entity.worldObj, x, y, z);
 	}
 
 	private static final void err(String format, Object... args)
 	{
-		System.err.println(String.format(format, args));
+		EventHelper.logger.error(format, args);
 	}
 }
