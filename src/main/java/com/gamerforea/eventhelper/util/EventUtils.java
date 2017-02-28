@@ -43,6 +43,14 @@ public final class EventUtils
 		}
 	}
 
+	public static final boolean cantBreak(EntityPlayer player, double x, double y, double z)
+	{
+		int xx = MathHelper.floor_double(x);
+		int yy = MathHelper.floor_double(y);
+		int zz = MathHelper.floor_double(z);
+		return cantBreak(player, xx, yy, zz);
+	}
+
 	public static final boolean cantDamage(Entity damager, Entity damagee)
 	{
 		try
@@ -64,7 +72,7 @@ public final class EventUtils
 	{
 		try
 		{
-			org.bukkit.entity.Player bPlayer = toBukkitEntity(player);
+			Player bPlayer = toBukkitEntity(player);
 			PlayerInteractEvent event = new PlayerInteractEvent(bPlayer, Action.RIGHT_CLICK_BLOCK, toBukkitItemStackMirror(stack), bPlayer.getWorld().getBlockAt(x, y, z), toBukkitFace(side));
 			EventHelper.callEvent(event);
 			return event.isCancelled();
