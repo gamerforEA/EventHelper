@@ -4,6 +4,7 @@ import java.lang.reflect.Method;
 
 import org.bukkit.plugin.Plugin;
 
+import com.google.common.base.Preconditions;
 import com.google.common.io.ByteStreams;
 
 public final class WGReflection
@@ -13,6 +14,7 @@ public final class WGReflection
 
 	public static final void setWG(Plugin plugin)
 	{
+		Preconditions.checkNotNull(plugin, "WorldGuard not installed!");
 		wgPlugin = plugin;
 		wgClassLoader = plugin.getClass().getClassLoader();
 	}

@@ -69,7 +69,8 @@ public abstract class FakePlayerContainer
 		if (player != null)
 		{
 			this.profile = player.getGameProfile();
-			this.realPlayer = new WeakReference<EntityPlayer>(player);
+			if (!(player instanceof FakePlayer))
+				this.realPlayer = new WeakReference<EntityPlayer>(player);
 		}
 	}
 
