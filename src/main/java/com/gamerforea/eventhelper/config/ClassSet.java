@@ -1,6 +1,6 @@
 package com.gamerforea.eventhelper.config;
 
-import com.gamerforea.eventhelper.EventHelper;
+import com.gamerforea.eventhelper.EventHelperMod;
 import com.google.common.base.Preconditions;
 
 import javax.annotation.Nonnull;
@@ -85,13 +85,13 @@ public final class ClassSet<T> implements Iterable<Class<? extends T>>
 				Class<?> clazz = Class.forName(className);
 				if (this.baseClass.isAssignableFrom(clazz))
 					this.add((Class<? extends T>) clazz);
-				else if (EventHelper.debug)
-					EventHelper.LOGGER.warn("Class {} is not assignable from {}", className, this.baseClass.getName());
+				else if (EventHelperMod.debug)
+					EventHelperMod.LOGGER.warn("Class {} is not assignable from {}", className, this.baseClass.getName());
 			}
 			catch (ClassNotFoundException e)
 			{
-				if (EventHelper.debug)
-					EventHelper.LOGGER.warn("Class {} not found", className);
+				if (EventHelperMod.debug)
+					EventHelperMod.LOGGER.warn("Class {} not found", className);
 			}
 		}
 	}

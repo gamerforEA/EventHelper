@@ -10,6 +10,4 @@ import java.lang.annotation.Target;
 public @interface ModNexus
 {
 	String name();
-
-	String uuid() default "";
 }

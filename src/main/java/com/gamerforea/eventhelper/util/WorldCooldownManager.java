@@ -19,16 +19,16 @@ public final class WorldCooldownManager extends CooldownManager<Integer>
 
 	public boolean canAdd(@Nonnull World world)
 	{
-		return this.canAdd(world.provider.dimensionId);
+		return this.canAdd(world.provider.getDimension());
 	}
 
 	public boolean add(@Nonnull World world)
 	{
-		return this.add(world.provider.dimensionId);
+		return this.add(world.provider.getDimension());
 	}
 
 	public long getCooldown(@Nonnull World world)
 	{
-		return this.getCooldown(world.provider.dimensionId);
+		return this.getCooldown(world.provider.getDimension());
 	}
 }

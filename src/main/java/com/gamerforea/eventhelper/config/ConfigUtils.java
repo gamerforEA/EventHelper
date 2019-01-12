@@ -1,6 +1,6 @@
 package com.gamerforea.eventhelper.config;
 
-import com.gamerforea.eventhelper.EventHelper;
+import com.gamerforea.eventhelper.EventHelperMod;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import net.minecraftforge.common.config.ConfigCategory;
@@ -39,7 +39,7 @@ public final class ConfigUtils
 	@Nonnull
 	public static Configuration getConfig(@Nonnull String cfgName)
 	{
-		Configuration cfg = new Configuration(new File(EventHelper.cfgDir, cfgName + ".cfg"));
+		Configuration cfg = new Configuration(new File(EventHelperMod.CFG_DIR, cfgName + ".cfg"));
 		cfg.load();
 		return cfg;
 	}
@@ -196,7 +196,7 @@ public final class ConfigUtils
 		}
 		catch (Throwable throwable)
 		{
-			EventHelper.LOGGER.error("Failed reading config " + cfg.getConfigFile().getName(), throwable);
+			EventHelperMod.LOGGER.error("Failed reading config " + cfg.getConfigFile().getName(), throwable);
 		}
 		cfg.save();
 	}

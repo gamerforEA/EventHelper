@@ -1,8 +1,6 @@
 package com.gamerforea.eventhelper.config;
 
-import com.gamerforea.eventhelper.EventHelper;
-import cpw.mods.fml.common.registry.FMLControlledNamespacedRegistry;
-import cpw.mods.fml.common.registry.GameData;
+import com.gamerforea.eventhelper.EventHelperMod;
 import gnu.trove.set.TIntSet;
 import gnu.trove.set.hash.TIntHashSet;
 import net.minecraft.block.Block;
@@ -10,6 +8,9 @@ import net.minecraft.init.Blocks;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemBlock;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.registry.RegistryNamespaced;
+import net.minecraft.util.registry.RegistryNamespacedDefaultedByKey;
 import org.apache.commons.lang3.StringUtils;
 
 import javax.annotation.Nonnull;
@@ -72,7 +73,7 @@ public final class ItemBlockList
 	public boolean contains(@Nonnull Item item, int meta)
 	{
 		this.load();
-		return item instanceof ItemBlock && this.contains(((ItemBlock) item).field_150939_a, meta) || contains(this.items, item, meta);
+		return item instanceof ItemBlock && this.contains(((ItemBlock) item).getBlock(), meta) || contains(this.items, item, meta);
 	}
 
 	public boolean contains(@Nonnull Block block, int meta)
@@ -87,8 +88,8 @@ public final class ItemBlockList
 		{
 			this.loaded = true;
 
-			FMLControlledNamespacedRegistry<Item> itemRegistry = GameData.getItemRegistry();
-			FMLControlledNamespacedRegistry<Block> blockRegistry = GameData.getBlockRegistry();
+			RegistryNamespaced<ResourceLocation, Item> itemRegistry = Item.REGISTRY;
+			RegistryNamespacedDefaultedByKey<ResourceLocation, Block> blockRegistry = Block.REGISTRY;
 
 			for (String s : this.rawSet)
 			{
@@ -100,15 +101,16 @@ public final class ItemBlockList
 					{
 						String name = parts[0];
 						int meta = parts.length > 1 ? safeParseInt(parts[1]) : ALL_META;
-						Item item = itemRegistry.getObject(name);
+						ResourceLocation resourceLocation = new ResourceLocation(name);
+						Item item = itemRegistry.getObject(resourceLocation);
 						if (item != null)
 							put(this.items, item, meta);
-						Block block = blockRegistry.getObject(name);
-						if (block != null && block != Blocks.air)
+						Block block = blockRegistry.getObject(resourceLocation);
+						if (block != Blocks.AIR)
 							put(this.blocks, block, meta);
 
-						if (EventHelper.debug && item == null && (block == null || block == Blocks.air))
-							EventHelper.LOGGER.warn("Item/block {} not found", name);
+						if (EventHelperMod.debug && item == null && block == Blocks.AIR)
+							EventHelperMod.LOGGER.warn("Item/block {} not found", resourceLocation);
 					}
 				}
 			}

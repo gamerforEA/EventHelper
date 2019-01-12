@@ -51,8 +51,7 @@ public final class NexusUtils
 	@Nonnull
 	public static GameProfile getGameProfile(@Nonnull Class<?> modNexusClass)
 	{
-		ModNexus annotation = getModNexusAnnotation(modNexusClass);
-		return annotation.uuid().isEmpty() ? getGameProfile(annotation.name()) : getGameProfile(annotation.name(), UUID.fromString(annotation.uuid()));
+		return getGameProfile(getModNexusAnnotation(modNexusClass).name());
 	}
 
 	@Nonnull
@@ -61,15 +60,7 @@ public final class NexusUtils
 		Preconditions.checkArgument(!fakeName.isEmpty(), "fakeName must not be empty");
 		if (fakeName.charAt(0) != '[')
 			fakeName = '[' + fakeName + ']';
-		return getGameProfile(fakeName, stringToId(fakeName));
-	}
-
-	@Nonnull
-	public static GameProfile getGameProfile(@Nonnull String fakeName, @Nonnull UUID fakeId)
-	{
-		Preconditions.checkArgument(!fakeName.isEmpty(), "fakeName must not be empty");
-		if (fakeName.charAt(0) != '[')
-			fakeName = '[' + fakeName + ']';
+		UUID fakeId = stringToId(fakeName);
 		return new GameProfile(fakeId, fakeName);
 	}
 
