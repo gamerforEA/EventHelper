@@ -1,10 +1,14 @@
 package com.gamerforea.eventhelper.util;
 
-import static com.gamerforea.eventhelper.util.ConvertUtils.toBukkitEntity;
-import static com.gamerforea.eventhelper.util.ConvertUtils.toBukkitFace;
-import static com.gamerforea.eventhelper.util.ConvertUtils.toBukkitItemStackMirror;
-import static com.gamerforea.eventhelper.util.ConvertUtils.toBukkitWorld;
-
+import com.gamerforea.eventhelper.EventHelper;
+import com.gamerforea.eventhelper.inject.InjectionManager;
+import com.google.common.base.Strings;
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.item.ItemStack;
+import net.minecraft.world.World;
+import net.minecraftforge.common.util.ForgeDirection;
+import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockBreakEvent;
@@ -13,19 +17,16 @@ import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent.DamageCause;
 import org.bukkit.event.player.PlayerInteractEvent;
 
-import com.gamerforea.eventhelper.EventHelper;
-import com.gamerforea.eventhelper.wg.WGRegionChecker;
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+import java.util.UUID;
 
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.item.ItemStack;
-import net.minecraft.util.MathHelper;
-import net.minecraft.world.World;
-import net.minecraftforge.common.util.ForgeDirection;
+import static com.gamerforea.eventhelper.util.ConvertUtils.*;
+import static net.minecraft.util.MathHelper.floor_double;
 
 public final class EventUtils
 {
-	public static final boolean cantBreak(EntityPlayer player, int x, int y, int z)
+	public static boolean cantBreak(@Nonnull EntityPlayer player, int x, int y, int z)
 	{
 		try
 		{
@@ -36,39 +37,36 @@ public final class EventUtils
 		}
 		catch (Throwable throwable)
 		{
-			err("Failed call BlockBreakEvent: [Player: %s, X:%d, Y:%d, Z:%d]", String.valueOf(player), x, y, z);
-			if (EventHelper.debug)
-				throwable.printStackTrace();
+			EventHelper.error(throwable, "Failed call BlockBreakEvent: [Player: {}, X:{}, Y:{}, Z:{}]", String.valueOf(player), x, y, z);
 			return true;
 		}
 	}
 
-	public static final boolean cantBreak(EntityPlayer player, double x, double y, double z)
+	public static boolean cantBreak(@Nonnull EntityPlayer player, double x, double y, double z)
 	{
-		int xx = MathHelper.floor_double(x);
-		int yy = MathHelper.floor_double(y);
-		int zz = MathHelper.floor_double(z);
+		int xx = floor_double(x);
+		int yy = floor_double(y);
+		int zz = floor_double(z);
 		return cantBreak(player, xx, yy, zz);
 	}
 
-	public static final boolean cantDamage(Entity damager, Entity damagee)
+	public static boolean cantDamage(@Nonnull Entity attacker, @Nonnull Entity victim)
 	{
 		try
 		{
-			EntityDamageByEntityEvent event = new EntityDamageByEntityEvent(toBukkitEntity(damager), toBukkitEntity(damagee), DamageCause.ENTITY_ATTACK, 0D);
+			EntityDamageByEntityEvent event = new EntityDamageByEntityEvent(toBukkitEntity(attacker), toBukkitEntity(victim), DamageCause.ENTITY_ATTACK, 0D);
 			EventHelper.callEvent(event);
 			return event.isCancelled();
 		}
 		catch (Throwable throwable)
 		{
-			err("Failed call EntityDamageByEntityEvent: [Damager: %s, Damagee: %s]", String.valueOf(damager), String.valueOf(damagee));
-			if (EventHelper.debug)
-				throwable.printStackTrace();
+			EventHelper.error(throwable, "Failed call EntityDamageByEntityEvent: [Attacker: {}, Victim: {}]", String.valueOf(attacker), String.valueOf(victim));
 			return true;
 		}
 	}
 
-	public static final boolean cantInteract(EntityPlayer player, ItemStack stack, int x, int y, int z, ForgeDirection side)
+	public static boolean cantInteract(
+			@Nonnull EntityPlayer player, @Nullable ItemStack stack, int x, int y, int z, @Nonnull ForgeDirection side)
 	{
 		try
 		{
@@ -79,14 +77,12 @@ public final class EventUtils
 		}
 		catch (Throwable throwable)
 		{
-			err("Failed call PlayerInteractEvent: [Player: %s, Item: %s, X:%d, Y:%d, Z:%d, Side: %s]", String.valueOf(player), String.valueOf(stack), x, y, z, String.valueOf(side));
-			if (EventHelper.debug)
-				throwable.printStackTrace();
+			EventHelper.error(throwable, "Failed call PlayerInteractEvent: [Player: {}, Item: {}, X:{}, Y:{}, Z:{}, Side: {}]", String.valueOf(player), String.valueOf(stack), x, y, z, String.valueOf(side));
 			return true;
 		}
 	}
 
-	public static final boolean cantFromTo(World world, int fromX, int fromY, int fromZ, int toX, int toY, int toZ)
+	public static boolean cantFromTo(@Nonnull World world, int fromX, int fromY, int fromZ, int toX, int toY, int toZ)
 	{
 		try
 		{
@@ -97,14 +93,13 @@ public final class EventUtils
 		}
 		catch (Throwable throwable)
 		{
-			err("Failed call BlockFromToEvent: [FromX: %d, FromY: %d, FromZ: %d, ToX: %d, ToY: %d, ToZ: %d]", fromX, fromY, fromZ, toX, toY, toZ);
-			if (EventHelper.debug)
-				throwable.printStackTrace();
+			EventHelper.error(throwable, "Failed call BlockFromToEvent: [FromX: {}, FromY: {}, FromZ: {}, ToX: {}, ToY: {}, ToZ: {}]", fromX, fromY, fromZ, toX, toY, toZ);
 			return true;
 		}
 	}
 
-	public static final boolean cantFromTo(World world, int fromX, int fromY, int fromZ, ForgeDirection direction)
+	public static boolean cantFromTo(
+			@Nonnull World world, int fromX, int fromY, int fromZ, @Nonnull ForgeDirection direction)
 	{
 		try
 		{
@@ -115,38 +110,122 @@ public final class EventUtils
 		}
 		catch (Throwable throwable)
 		{
-			err("Failed call BlockFromToEvent: [FromX: %d, FromY: %d, FromZ: %d, Direction: %s]", fromX, fromY, fromZ, String.valueOf(direction));
-			if (EventHelper.debug)
-				throwable.printStackTrace();
+			EventHelper.error(throwable, "Failed call BlockFromToEvent: [FromX: {}, FromY: {}, FromZ: {}, Direction: {}]", fromX, fromY, fromZ, String.valueOf(direction));
 			return true;
 		}
 	}
 
-	public static final boolean isInPrivate(World world, int x, int y, int z)
+	public static boolean isInPrivate(@Nonnull World world, int x, int y, int z)
 	{
 		try
 		{
-			return WGRegionChecker.isInPrivate(toBukkitWorld(world), x, y, z);
+			return InjectionManager.isInPrivate(toBukkitWorld(world), x, y, z);
 		}
 		catch (Throwable throwable)
 		{
-			err("Failed check private: [World: %s, X: %d, Y: %d, Z: %d]", world.getWorldInfo().getWorldName(), x, y, z);
-			if (EventHelper.debug)
-				throwable.printStackTrace();
+			EventHelper.error(throwable, "Failed check private: [World: {}, X: {}, Y: {}, Z: {}]", world.getWorldInfo().getWorldName(), x, y, z);
 			return true;
 		}
 	}
 
-	public static final boolean isInPrivate(Entity entity)
+	public static boolean isPrivateMember(@Nonnull EntityPlayer player, double x, double y, double z)
 	{
-		int x = MathHelper.floor_double(entity.posX);
-		int y = MathHelper.floor_double(entity.posY);
-		int z = MathHelper.floor_double(entity.posZ);
+		int xx = floor_double(x);
+		int yy = floor_double(y);
+		int zz = floor_double(z);
+		return isPrivateMember(player, xx, yy, zz);
+	}
+
+	public static boolean isPrivateMember(@Nonnull EntityPlayer player, int x, int y, int z)
+	{
+		try
+		{
+			return InjectionManager.isPrivateMember(toBukkitEntity(player), x, y, z);
+		}
+		catch (Throwable throwable)
+		{
+			EventHelper.error(throwable, "Failed check private member: [Player: {}, X: {}, Y: {}, Z: {}]", String.valueOf(player), x, y, z);
+			return true;
+		}
+	}
+
+	public static boolean isPrivateOwner(@Nonnull EntityPlayer player, double x, double y, double z)
+	{
+		int xx = floor_double(x);
+		int yy = floor_double(y);
+		int zz = floor_double(z);
+		return isPrivateOwner(player, xx, yy, zz);
+	}
+
+	public static boolean isPrivateOwner(@Nonnull EntityPlayer player, int x, int y, int z)
+	{
+		try
+		{
+			return InjectionManager.isPrivateOwner(toBukkitEntity(player), x, y, z);
+		}
+		catch (Throwable throwable)
+		{
+			EventHelper.error(throwable, "Failed check private owner: [Player: {}, X: {}, Y: {}, Z: {}]", String.valueOf(player), x, y, z);
+			return true;
+		}
+	}
+
+	public static boolean isInPrivate(@Nonnull Entity entity)
+	{
+		int x = floor_double(entity.posX);
+		int y = floor_double(entity.posY);
+		int z = floor_double(entity.posZ);
 		return isInPrivate(entity.worldObj, x, y, z);
 	}
 
-	private static final void err(String format, Object... args)
+	public static boolean hasPermission(@Nullable EntityPlayer player, @Nonnull String permission)
 	{
-		System.err.println(String.format(format, args));
+		if (player == null)
+			return false;
+
+		try
+		{
+			Player bPlayer = toBukkitEntity(player);
+			return bPlayer != null && bPlayer.hasPermission(permission);
+		}
+		catch (Throwable throwable)
+		{
+			EventHelper.error(throwable, "Failed checking permission: [Player: {}, Permission: {}]", player, permission);
+			return false;
+		}
+	}
+
+	public static boolean hasPermission(@Nullable UUID playerId, @Nonnull String permission)
+	{
+		if (playerId == null)
+			return false;
+
+		try
+		{
+			Player player = Bukkit.getPlayer(playerId);
+			return player != null && player.hasPermission(permission);
+		}
+		catch (Throwable throwable)
+		{
+			EventHelper.error(throwable, "Failed checking permission: [Player name: {}, Permission: {}]", playerId, permission);
+			return false;
+		}
+	}
+
+	public static boolean hasPermission(@Nullable String playerName, @Nonnull String permission)
+	{
+		if (Strings.isNullOrEmpty(playerName))
+			return false;
+
+		try
+		{
+			Player player = Bukkit.getPlayerExact(playerName);
+			return player != null && player.hasPermission(permission);
+		}
+		catch (Throwable throwable)
+		{
+			EventHelper.error(throwable, "Failed checking permission: [Player UUID: {}, Permission: {}]", playerName, permission);
+			return false;
+		}
 	}
 }

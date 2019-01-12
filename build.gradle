@@ -25,9 +25,14 @@ apply plugin: 'forge'
 
 [compileJava, compileTestJava]*.options*.encoding = 'UTF-8'
 
-version = "1.8"
+version = "1.7.10-1.9"
 group= "com.gamerforea"
 archivesBaseName = "EventHelper"
+
+sourceCompatibility = targetCompatibility = '1.8'
+compileJava {
+	sourceCompatibility = targetCompatibility = '1.8'
+}
 
 minecraft {
 	version = "1.7.10-10.13.4.1614-1.7.10"
@@ -39,6 +44,7 @@ dependencies {
 	compile name: 'bukkit-1.7.10'
 	compile name: 'worldedit-6.1'
 	compile name: 'worldguard-6.1'
+	compile name: 'GriefPreventionPlus-13.3'
 }
 
 task devJar(type: Jar) {
