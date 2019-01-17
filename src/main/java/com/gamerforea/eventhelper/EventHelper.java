@@ -1,5 +1,6 @@
 package com.gamerforea.eventhelper;
 
+import com.gamerforea.eventhelper.command.CommandReloadAllConfigs;
 import com.gamerforea.eventhelper.config.ConfigUtils;
 import com.gamerforea.eventhelper.inject.InjectionManager;
 import com.google.common.collect.Lists;
@@ -7,6 +8,7 @@ import cpw.mods.fml.common.Loader;
 import cpw.mods.fml.common.Mod;
 import cpw.mods.fml.common.Mod.EventHandler;
 import cpw.mods.fml.common.event.FMLServerStartedEvent;
+import cpw.mods.fml.common.event.FMLServerStartingEvent;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import net.minecraftforge.common.config.Configuration;
@@ -35,6 +37,12 @@ public final class EventHelper
 	public static String craftPackage = "org.bukkit.craftbukkit.v1_7_R4";
 	public static boolean explosions = true;
 	public static boolean debug = true;
+
+	@EventHandler
+	public void onServerStart(FMLServerStartingEvent event)
+	{
+		event.registerServerCommand(new CommandReloadAllConfigs());
+	}
 
 	@EventHandler
 	public final void serverStarted(FMLServerStartedEvent event)

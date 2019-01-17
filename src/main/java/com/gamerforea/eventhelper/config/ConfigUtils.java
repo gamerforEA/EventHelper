@@ -10,6 +10,7 @@ import net.minecraftforge.common.config.Property;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.io.File;
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.*;
@@ -18,6 +19,23 @@ public final class ConfigUtils
 {
 	private static final String PACKAGE_DEFAULT = "default";
 	private static final Set<Class<?>> LOADED_CONFIG_CLASSES = new HashSet<>();
+
+	public static Set<String> reloadAllConfigs()
+	{
+		Set<String> configNames = new TreeSet<>();
+		for (Class<?> configClass : LOADED_CONFIG_CLASSES)
+		{
+			try
+			{
+				readConfig(configClass, true);
+				configNames.add(getConfigName(configClass));
+			}
+			catch (Throwable ignored)
+			{
+			}
+		}
+		return configNames;
+	}
 
 	@Nonnull
 	public static <T extends Collection<String>> T readStringCollection(
@@ -69,136 +87,163 @@ public final class ConfigUtils
 		{
 			for (Field field : configClass.getDeclaredFields())
 			{
-				int modifiers = field.getModifiers();
-				if (Modifier.isPublic(modifiers) && Modifier.isStatic(modifiers) && !Modifier.isFinal(modifiers))
+				try
 				{
-					Class<?> type = field.getType();
-					if (type == boolean.class)
-					{
-						ConfigBoolean annotation = field.getAnnotation(ConfigBoolean.class);
-						if (annotation != null)
-						{
-							String name = annotation.name().isEmpty() ? field.getName() : annotation.name();
-							tryMoveProperty(cfg, name, annotation.category(), annotation.oldName(), annotation.oldCategory());
-
-							boolean defaultValue = field.getBoolean(null);
-							boolean value = cfg.getBoolean(name, annotation.category(), defaultValue, annotation.comment());
-							field.setBoolean(null, value);
-						}
-					}
-					else if (type == float.class)
-					{
-						ConfigFloat annotation = field.getAnnotation(ConfigFloat.class);
-						if (annotation != null)
-						{
-							String name = annotation.name().isEmpty() ? field.getName() : annotation.name();
-							tryMoveProperty(cfg, name, annotation.category(), annotation.oldName(), annotation.oldCategory());
-
-							float defaultValue = field.getFloat(null);
-							float value = cfg.getFloat(name, annotation.category(), defaultValue, annotation.min(), annotation.max(), annotation.comment());
-							field.setFloat(null, value);
-						}
-					}
-					else if (type == int.class)
-					{
-						ConfigInt annotation = field.getAnnotation(ConfigInt.class);
-						if (annotation != null)
-						{
-							String name = annotation.name().isEmpty() ? field.getName() : annotation.name();
-							tryMoveProperty(cfg, name, annotation.category(), annotation.oldName(), annotation.oldCategory());
-
-							int defaultValue = field.getInt(null);
-							int value = cfg.getInt(name, annotation.category(), defaultValue, annotation.min(), annotation.max(), annotation.comment());
-							field.setInt(null, value);
-						}
-					}
-					else if (type == String.class)
-					{
-						ConfigString annotation = field.getAnnotation(ConfigString.class);
-						if (annotation != null)
-						{
-							String name = annotation.name().isEmpty() ? field.getName() : annotation.name();
-							tryMoveProperty(cfg, name, annotation.category(), annotation.oldName(), annotation.oldCategory());
-
-							String defaultValue = (String) field.get(null);
-							String value = cfg.getString(name, annotation.category(), defaultValue, annotation.comment());
-							field.set(null, value);
-						}
-					}
-					else if (type == ItemBlockList.class)
-					{
-						ConfigItemBlockList annotation = field.getAnnotation(ConfigItemBlockList.class);
-						if (annotation != null)
-						{
-							String name = annotation.name().isEmpty() ? field.getName() : annotation.name();
-							tryMoveProperty(cfg, name, annotation.category(), annotation.oldName(), annotation.oldCategory());
-
-							ItemBlockList list = (ItemBlockList) field.get(null);
-							Objects.requireNonNull(list, "ItemBlockList " + configClass.getName() + '.' + field.getName() + " must not be null");
-							Set<String> values = readStringCollection(cfg, name, annotation.category(), annotation.comment(), new HashSet<>(list.getRaw()));
-							list.clear();
-							list.addRaw(values);
-						}
-					}
-					else if (type == ClassSet.class)
-					{
-						ConfigClassSet annotation = field.getAnnotation(ConfigClassSet.class);
-						if (annotation != null)
-						{
-							String name = annotation.name().isEmpty() ? field.getName() : annotation.name();
-							tryMoveProperty(cfg, name, annotation.category(), annotation.oldName(), annotation.oldCategory());
-
-							ClassSet<?> classSet = (ClassSet<?>) field.get(null);
-							Objects.requireNonNull(classSet, "ClassSet " + configClass.getName() + '.' + field.getName() + " must not be null");
-							Set<String> values = readStringCollection(cfg, name, annotation.category(), annotation.comment(), new HashSet<>(classSet.getRaw()));
-							classSet.clear();
-							classSet.addRaw(values);
-						}
-					}
-					else if (Enum.class.isAssignableFrom(type))
-					{
-						ConfigEnum annotation = field.getAnnotation(ConfigEnum.class);
-						if (annotation != null)
-						{
-							String name = annotation.name().isEmpty() ? field.getName() : annotation.name();
-							tryMoveProperty(cfg, name, annotation.category(), annotation.oldName(), annotation.oldCategory());
-
-							Enum<?> defaultValue = (Enum<?>) field.get(null);
-							Objects.requireNonNull(defaultValue, "Enum " + configClass.getName() + '.' + field.getName() + " must not be null");
-							String valueName = cfg.getString(name, annotation.category(), defaultValue.name(), annotation.comment());
-							try
-							{
-								Enum<?> value = Enum.valueOf(defaultValue.getDeclaringClass(), valueName);
-								field.set(null, value);
-							}
-							catch (IllegalArgumentException e)
-							{
-								e.printStackTrace();
-							}
-						}
-					}
-					else if (Collection.class.isAssignableFrom(type))
-					{
-						// TODO Check generic type
-						ConfigStringCollection annotation = field.getAnnotation(ConfigStringCollection.class);
-						if (annotation != null)
-						{
-							String name = annotation.name().isEmpty() ? field.getName() : annotation.name();
-							tryMoveProperty(cfg, name, annotation.category(), annotation.oldName(), annotation.oldCategory());
-
-							Collection<String> collection = (Collection<String>) field.get(null);
-							Objects.requireNonNull(collection, "Collection " + configClass.getName() + '.' + field.getName() + " must not be null");
-							readStringCollection(cfg, name, annotation.category(), annotation.comment(), collection);
-						}
-					}
+					readConfigProperty(cfg, field);
+				}
+				catch (Throwable throwable)
+				{
+					EventHelper.LOGGER.error("Failed reading property {} in config {}", field, cfg.getConfigFile().getName(), throwable);
 				}
 			}
 		}
 		catch (Throwable throwable)
 		{
-			EventHelper.LOGGER.error("Failed reading config " + cfg.getConfigFile().getName(), throwable);
+			EventHelper.LOGGER.error("Failed reading config {}", cfg.getConfigFile().getName(), throwable);
 		}
 		cfg.save();
+	}
+
+	private static void readConfigProperty(@Nonnull Configuration cfg, @Nonnull Field field)
+			throws IllegalAccessException
+	{
+		if (Modifier.isStatic(field.getModifiers()))
+		{
+			field.setAccessible(true);
+			for (Annotation declaredAnnotation : field.getDeclaredAnnotations())
+			{
+				// Handle all annotations to throw expection if field have multiple config annotations
+
+				Class<? extends Annotation> annotationType = declaredAnnotation.annotationType();
+				if (annotationType == ConfigBoolean.class)
+				{
+					checkType(field, boolean.class);
+					checkNotFinal(field);
+
+					ConfigBoolean annotation = (ConfigBoolean) declaredAnnotation;
+					String name = annotation.name().isEmpty() ? field.getName() : annotation.name();
+					tryMoveProperty(cfg, name, annotation.category(), annotation.oldName(), annotation.oldCategory());
+
+					boolean defaultValue = field.getBoolean(null);
+					boolean value = cfg.getBoolean(name, annotation.category(), defaultValue, annotation.comment());
+					field.setBoolean(null, value);
+				}
+				else if (annotationType == ConfigFloat.class)
+				{
+					checkType(field, float.class);
+					checkNotFinal(field);
+
+					ConfigFloat annotation = (ConfigFloat) declaredAnnotation;
+					String name = annotation.name().isEmpty() ? field.getName() : annotation.name();
+					tryMoveProperty(cfg, name, annotation.category(), annotation.oldName(), annotation.oldCategory());
+
+					float defaultValue = field.getFloat(null);
+					float value = cfg.getFloat(name, annotation.category(), defaultValue, annotation.min(), annotation.max(), annotation.comment());
+					field.setFloat(null, value);
+				}
+				else if (annotationType == ConfigInt.class)
+				{
+					checkType(field, int.class);
+					checkNotFinal(field);
+
+					ConfigInt annotation = (ConfigInt) declaredAnnotation;
+					String name = annotation.name().isEmpty() ? field.getName() : annotation.name();
+					tryMoveProperty(cfg, name, annotation.category(), annotation.oldName(), annotation.oldCategory());
+
+					int defaultValue = field.getInt(null);
+					int value = cfg.getInt(name, annotation.category(), defaultValue, annotation.min(), annotation.max(), annotation.comment());
+					field.setInt(null, value);
+				}
+				else if (annotationType == ConfigString.class)
+				{
+					checkType(field, String.class);
+					checkNotFinal(field);
+
+					ConfigString annotation = (ConfigString) declaredAnnotation;
+					String name = annotation.name().isEmpty() ? field.getName() : annotation.name();
+					tryMoveProperty(cfg, name, annotation.category(), annotation.oldName(), annotation.oldCategory());
+
+					String defaultValue = (String) field.get(null);
+					String value = cfg.getString(name, annotation.category(), defaultValue, annotation.comment());
+					field.set(null, value);
+				}
+				else if (annotationType == ConfigItemBlockList.class)
+				{
+					checkType(field, ItemBlockList.class);
+
+					ConfigItemBlockList annotation = (ConfigItemBlockList) declaredAnnotation;
+					String name = annotation.name().isEmpty() ? field.getName() : annotation.name();
+					tryMoveProperty(cfg, name, annotation.category(), annotation.oldName(), annotation.oldCategory());
+
+					ItemBlockList list = (ItemBlockList) field.get(null);
+					Objects.requireNonNull(list, field + " value must not be null");
+					Set<String> values = readStringCollection(cfg, name, annotation.category(), annotation.comment(), new HashSet<>(list.getRaw()));
+					list.clear();
+					list.addRaw(values);
+				}
+				else if (annotationType == ConfigClassSet.class)
+				{
+					checkType(field, ClassSet.class);
+
+					ConfigClassSet annotation = (ConfigClassSet) declaredAnnotation;
+					String name = annotation.name().isEmpty() ? field.getName() : annotation.name();
+					tryMoveProperty(cfg, name, annotation.category(), annotation.oldName(), annotation.oldCategory());
+
+					ClassSet<?> classSet = (ClassSet<?>) field.get(null);
+					Objects.requireNonNull(classSet, field + " value must not be null");
+					Set<String> values = readStringCollection(cfg, name, annotation.category(), annotation.comment(), new HashSet<>(classSet.getRaw()));
+					classSet.clear();
+					classSet.addRaw(values);
+				}
+				else if (annotationType == ConfigEnum.class)
+				{
+					checkType(field, Enum.class);
+					checkNotFinal(field);
+
+					ConfigEnum annotation = (ConfigEnum) declaredAnnotation;
+					String name = annotation.name().isEmpty() ? field.getName() : annotation.name();
+					tryMoveProperty(cfg, name, annotation.category(), annotation.oldName(), annotation.oldCategory());
+
+					Enum<?> defaultValue = (Enum<?>) field.get(null);
+					Objects.requireNonNull(defaultValue, field + " value must not be null");
+					String valueName = cfg.getString(name, annotation.category(), defaultValue.name(), annotation.comment());
+					try
+					{
+						Enum<?> value = Enum.valueOf(defaultValue.getDeclaringClass(), valueName);
+						field.set(null, value);
+					}
+					catch (IllegalArgumentException e)
+					{
+						e.printStackTrace();
+					}
+				}
+				else if (annotationType == ConfigStringCollection.class)
+				{
+					// TODO Check generic type
+					checkType(field, Collection.class);
+
+					ConfigStringCollection annotation = (ConfigStringCollection) declaredAnnotation;
+					String name = annotation.name().isEmpty() ? field.getName() : annotation.name();
+					tryMoveProperty(cfg, name, annotation.category(), annotation.oldName(), annotation.oldCategory());
+
+					Collection<String> collection = (Collection<String>) field.get(null);
+					Objects.requireNonNull(collection, field + " value must not be null");
+					readStringCollection(cfg, name, annotation.category(), annotation.comment(), collection);
+				}
+			}
+		}
+	}
+
+	private static void checkType(@Nonnull Field field, @Nonnull Class<?> expectedType)
+	{
+		Class<?> type = field.getType();
+		Preconditions.checkArgument(expectedType == type || expectedType.isAssignableFrom(type), field + " type must be " + expectedType + " ( real type is " + type + ')');
+	}
+
+	private static void checkNotFinal(@Nonnull Field field)
+	{
+		int modifiers = field.getModifiers();
+		Preconditions.checkArgument(!Modifier.isFinal(modifiers), field + " must not be final");
 	}
 
 	private static boolean tryMoveProperty(
