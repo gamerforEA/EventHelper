@@ -4,6 +4,7 @@ import com.flowpowered.math.vector.Vector3d;
 import com.gamerforea.eventhelper.EventHelperMod;
 import com.gamerforea.eventhelper.integration.IIntegration;
 import com.google.common.collect.ImmutableList;
+import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.EnumFacing;
@@ -93,6 +94,30 @@ public final class SpongeIntegration
 				Transaction<BlockSnapshot> transaction = new Transaction<>(original, getAirSnapshot(world, pos));
 				return Sponge.getEventManager().post(createChangeBlockEventBreak(cause, ImmutableList.of(transaction)));
 			}
+		}
+
+		@Override
+		public boolean cantPlace(@Nonnull EntityPlayer player, @Nonnull BlockPos pos, @Nonnull IBlockState blockState)
+		{
+			try (CauseStackManager.StackFrame stackFrame = Sponge.getGame().getCauseStackManager().pushCauseFrame())
+			{
+				stackFrame.pushCause(player);
+				if (player instanceof FakePlayer && player instanceof Player)
+					stackFrame.addContext(EventContextKeys.FAKE_PLAYER, (Player) player);
+
+				Cause cause = stackFrame.getCurrentCause();
+				World world = getWorld(player.world);
+				BlockSnapshot original = world.createSnapshot(pos.getX(), pos.getY(), pos.getZ());
+				Transaction<BlockSnapshot> transaction = new Transaction<>(original, getBlockSnapshot(world, pos, blockState));
+				return Sponge.getEventManager().post(createChangeBlockEventPlace(cause, ImmutableList.of(transaction)));
+			}
+		}
+
+		@Override
+		public boolean cantReplace(@Nonnull EntityPlayer player, @Nonnull BlockPos pos, @Nonnull IBlockState blockState)
+		{
+			// TODO Use org.spongepowered.api.event.block.ChangeBlockEvent.Modify event
+			return this.cantPlace(player, pos, blockState);
 		}
 
 		@Override

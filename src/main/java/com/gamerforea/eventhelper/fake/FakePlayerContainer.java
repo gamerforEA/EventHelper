@@ -5,6 +5,7 @@ import com.gamerforea.eventhelper.util.ExplosionByPlayer;
 import com.gamerforea.eventhelper.util.FastUtils;
 import com.google.common.base.Preconditions;
 import com.mojang.authlib.GameProfile;
+import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.nbt.NBTTagCompound;
@@ -137,6 +138,16 @@ public abstract class FakePlayerContainer
 	public final boolean cantBreak(@Nonnull BlockPos pos)
 	{
 		return EventUtils.cantBreak(this.getPlayer(), pos);
+	}
+
+	public final boolean cantPlace(@Nonnull BlockPos pos, @Nonnull IBlockState blockState)
+	{
+		return EventUtils.cantPlace(this.getPlayer(), pos, blockState);
+	}
+
+	public final boolean cantReplace(@Nonnull BlockPos pos, @Nonnull IBlockState blockState)
+	{
+		return EventUtils.cantReplace(this.getPlayer(), pos, blockState);
 	}
 
 	public final boolean cantAttack(@Nonnull Entity target)

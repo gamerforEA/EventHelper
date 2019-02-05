@@ -2,6 +2,7 @@ package com.gamerforea.eventhelper.integration.bukkit;
 
 import com.gamerforea.eventhelper.EventHelperMod;
 import com.gamerforea.eventhelper.integration.IIntegration;
+import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.EnumFacing;
@@ -77,6 +78,20 @@ public final class BukkitIntegration
 			BlockBreakEvent event = new BlockBreakEvent(block, bukkitPlayer);
 			Bukkit.getPluginManager().callEvent(event);
 			return event.isCancelled();
+		}
+
+		@Override
+		public boolean cantPlace(@Nonnull EntityPlayer player, @Nonnull BlockPos pos, @Nonnull IBlockState blockState)
+		{
+			// TODO Make correct implementation
+			return this.cantBreak(player, pos);
+		}
+
+		@Override
+		public boolean cantReplace(@Nonnull EntityPlayer player, @Nonnull BlockPos pos, @Nonnull IBlockState blockState)
+		{
+			// TODO Make correct implementation
+			return this.cantBreak(player, pos);
 		}
 
 		@Override

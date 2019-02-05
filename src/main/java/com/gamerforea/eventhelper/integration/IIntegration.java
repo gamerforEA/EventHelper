@@ -1,5 +1,6 @@
 package com.gamerforea.eventhelper.integration;
 
+import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.server.MinecraftServer;
@@ -15,6 +16,10 @@ import java.util.UUID;
 public interface IIntegration
 {
 	boolean cantBreak(@Nonnull EntityPlayer player, @Nonnull BlockPos pos);
+
+	boolean cantPlace(@Nonnull EntityPlayer player, @Nonnull BlockPos pos, @Nonnull IBlockState blockState);
+
+	boolean cantReplace(@Nonnull EntityPlayer player, @Nonnull BlockPos pos, @Nonnull IBlockState blockState);
 
 	boolean cantAttack(@Nonnull EntityPlayer player, @Nonnull Entity victim);
 

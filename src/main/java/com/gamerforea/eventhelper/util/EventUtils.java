@@ -4,6 +4,7 @@ import com.gamerforea.eventhelper.EventHelperMod;
 import com.gamerforea.eventhelper.integration.IIntegration;
 import com.gamerforea.eventhelper.integration.bukkit.BukkitIntegration;
 import com.gamerforea.eventhelper.integration.sponge.SpongeIntegration;
+import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.EnumFacing;
@@ -28,7 +29,39 @@ public final class EventUtils
 		}
 		catch (Throwable throwable)
 		{
-			LOGGER.error("Failed call ChangeBlockEvent.Break: [Player: {}, Pos: {}]", player, pos);
+			LOGGER.error("Failed call break block event: [Player: {}, Pos: {}]", player, pos);
+			if (EventHelperMod.debug)
+				throwable.printStackTrace();
+			return true;
+		}
+	}
+
+	public static boolean cantPlace(
+			@Nonnull EntityPlayer player, @Nonnull BlockPos pos, @Nonnull IBlockState blockState)
+	{
+		try
+		{
+			return INTEGRATION.cantPlace(player, pos, blockState);
+		}
+		catch (Throwable throwable)
+		{
+			LOGGER.error("Failed call place block event: [Player: {}, Pos: {}, Block State: {}]", player, pos, blockState);
+			if (EventHelperMod.debug)
+				throwable.printStackTrace();
+			return true;
+		}
+	}
+
+	public static boolean cantReplace(
+			@Nonnull EntityPlayer player, @Nonnull BlockPos pos, @Nonnull IBlockState blockState)
+	{
+		try
+		{
+			return INTEGRATION.cantReplace(player, pos, blockState);
+		}
+		catch (Throwable throwable)
+		{
+			LOGGER.error("Failed call replace block event: [Player: {}, Pos: {}, Block State: {}]", player, pos, blockState);
 			if (EventHelperMod.debug)
 				throwable.printStackTrace();
 			return true;
@@ -43,7 +76,7 @@ public final class EventUtils
 		}
 		catch (Throwable throwable)
 		{
-			LOGGER.error("Failed call AttackEntityEvent: [Player: {}, Victim: {}]", player, victim);
+			LOGGER.error("Failed call attack entity event: [Player: {}, Victim: {}]", player, victim);
 			if (EventHelperMod.debug)
 				throwable.printStackTrace();
 			return true;
@@ -60,7 +93,7 @@ public final class EventUtils
 		}
 		catch (Throwable throwable)
 		{
-			LOGGER.error("Failed call PlayerInteractEvent: [Player: {}, Hand: {}, Pos: {}, Side: {}]", player, hand, targetPos, targetSide);
+			LOGGER.error("Failed call interact event: [Player: {}, Hand: {}, Pos: {}, Side: {}]", player, hand, targetPos, targetSide);
 			if (EventHelperMod.debug)
 				throwable.printStackTrace();
 			return true;
@@ -78,7 +111,7 @@ public final class EventUtils
 		}
 		catch (Throwable throwable)
 		{
-			LOGGER.error("Failed call PlayerInteractEvent: [Player: {}, Hand: {}, Pos: {}, Side: {}]", player, hand, targetPos, targetSide);
+			LOGGER.error("Failed call interact event: [Player: {}, Hand: {}, Pos: {}, Side: {}]", player, hand, targetPos, targetSide);
 			if (EventHelperMod.debug)
 				throwable.printStackTrace();
 			return true;
