@@ -78,21 +78,23 @@ public final class ClassSet<T> implements Iterable<Class<? extends T>>
 
 	public void addRaw(@Nonnull Collection<String> classNames)
 	{
-		for (String className : classNames)
+		classNames.forEach(this::addRaw);
+	}
+
+	public void addRaw(@Nonnull String className)
+	{
+		try
 		{
-			try
-			{
-				Class<?> clazz = Class.forName(className);
-				if (this.baseClass.isAssignableFrom(clazz))
-					this.add((Class<? extends T>) clazz);
-				else if (EventHelperMod.debug)
-					EventHelperMod.LOGGER.warn("Class {} is not assignable from {}", className, this.baseClass.getName());
-			}
-			catch (ClassNotFoundException e)
-			{
-				if (EventHelperMod.debug)
-					EventHelperMod.LOGGER.warn("Class {} not found", className);
-			}
+			Class<?> clazz = Class.forName(className);
+			if (this.baseClass.isAssignableFrom(clazz))
+				this.add((Class<? extends T>) clazz);
+			else if (EventHelperMod.debug)
+				EventHelperMod.LOGGER.warn("Class {} is not assignable from {}", className, this.baseClass.getName());
+		}
+		catch (ClassNotFoundException e)
+		{
+			if (EventHelperMod.debug)
+				EventHelperMod.LOGGER.warn("Class {} not found", className);
 		}
 	}
 

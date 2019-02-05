@@ -1,9 +1,10 @@
 package com.gamerforea.eventhelper.config;
 
 import com.gamerforea.eventhelper.EventHelperMod;
-import gnu.trove.set.TIntSet;
-import gnu.trove.set.hash.TIntHashSet;
+import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
+import it.unimi.dsi.fastutil.ints.IntSet;
 import net.minecraft.block.Block;
+import net.minecraft.block.state.IBlockState;
 import net.minecraft.init.Blocks;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemBlock;
@@ -16,6 +17,7 @@ import org.apache.commons.lang3.StringUtils;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.*;
+import java.util.function.IntSupplier;
 
 public final class ItemBlockList
 {
@@ -24,8 +26,8 @@ public final class ItemBlockList
 	private static final int ALL_META = -1;
 
 	private final Set<String> rawSet = new HashSet<>();
-	private final Map<Item, TIntSet> items = new HashMap<>();
-	private final Map<Block, TIntSet> blocks = new HashMap<>();
+	private final Map<Item, IntSet> items = new HashMap<>();
+	private final Map<Block, IntSet> blocks = new HashMap<>();
 	private boolean loaded = true;
 
 	public ItemBlockList()
@@ -76,6 +78,24 @@ public final class ItemBlockList
 		return item instanceof ItemBlock && this.contains(((ItemBlock) item).getBlock(), meta) || contains(this.items, item, meta);
 	}
 
+	public boolean contains(@Nonnull IBlockState blockState)
+	{
+		this.load();
+		Block block = blockState.getBlock();
+		// Lazy meta getter for better performance
+		return contains(this.blocks, block, () -> {
+			int meta = 0;
+			try
+			{
+				meta = block.getMetaFromState(blockState);
+			}
+			catch (Throwable ignored)
+			{
+			}
+			return meta;
+		});
+	}
+
 	public boolean contains(@Nonnull Block block, int meta)
 	{
 		this.load();
@@ -117,18 +137,24 @@ public final class ItemBlockList
 		}
 	}
 
-	private static <K> boolean put(Map<K, TIntSet> map, K key, int value)
+	private static <K> boolean put(Map<K, IntSet> map, K key, int value)
 	{
-		TIntSet set = map.get(key);
+		IntSet set = map.get(key);
 		if (set == null)
-			map.put(key, set = new TIntHashSet());
+			map.put(key, set = new IntOpenHashSet());
 		return set.add(value);
 	}
 
-	private static <K> boolean contains(Map<K, TIntSet> map, K key, int value)
+	private static <K> boolean contains(Map<K, IntSet> map, K key, int value)
 	{
-		TIntSet set = map.get(key);
-		return set != null && (set.contains(value) || set.contains(ALL_META));
+		IntSet set = map.get(key);
+		return set != null && (set.contains(ALL_META) || set.contains(value));
+	}
+
+	private static <K> boolean contains(Map<K, IntSet> map, K key, IntSupplier valueSupplier)
+	{
+		IntSet set = map.get(key);
+		return set != null && (set.contains(ALL_META) || set.contains(valueSupplier.getAsInt()));
 	}
 
 	private static int safeParseInt(String s)
