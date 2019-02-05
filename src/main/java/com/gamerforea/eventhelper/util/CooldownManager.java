@@ -1,11 +1,11 @@
 package com.gamerforea.eventhelper.util;
 
+import cpw.mods.fml.common.FMLCommonHandler;
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 import cpw.mods.fml.common.gameevent.TickEvent;
 import gnu.trove.iterator.TObjectLongIterator;
 import gnu.trove.map.TObjectLongMap;
 import gnu.trove.map.hash.TObjectLongHashMap;
-import net.minecraftforge.common.MinecraftForge;
 
 import javax.annotation.Nonnull;
 import java.util.concurrent.TimeUnit;
@@ -24,7 +24,7 @@ public class CooldownManager<T>
 	{
 		this.cooldown = Math.max(0, cooldownInTicks);
 		if (this.cooldown > 0)
-			MinecraftForge.EVENT_BUS.register(this);
+			FMLCommonHandler.instance().bus().register(this);
 	}
 
 	public boolean canAdd(@Nonnull T key)
