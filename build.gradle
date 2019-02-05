@@ -56,3 +56,9 @@ artifacts {
 	archives sourcesJar
 }
 
+jar {
+	manifest {
+		attributes 'FMLCorePlugin': 'com.gamerforea.eventhelper.coremod.CoreMod'
+		attributes 'FMLCorePluginContainsFMLMod': 'true'
+	}
+}
