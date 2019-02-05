@@ -1,7 +1,9 @@
 package com.gamerforea.eventhelper.integration.sponge;
 
 import com.flowpowered.math.vector.Vector3i;
+import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.init.Blocks;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.math.BlockPos;
@@ -10,9 +12,7 @@ import org.spongepowered.api.Sponge;
 import org.spongepowered.api.block.BlockSnapshot;
 import org.spongepowered.api.block.BlockState;
 import org.spongepowered.api.block.BlockType;
-import org.spongepowered.api.block.BlockTypes;
 import org.spongepowered.api.data.type.HandType;
-import org.spongepowered.api.data.type.HandTypes;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.entity.living.player.User;
 import org.spongepowered.api.event.cause.Cause;
@@ -71,11 +71,24 @@ public final class SpongeUtils
 	}
 
 	@Nonnull
+	public static BlockState getState(@Nonnull IBlockState blockState)
+	{
+		return unsafeCast(blockState);
+	}
+
+	@Nonnull
 	public static BlockSnapshot getAirSnapshot(@Nonnull org.spongepowered.api.world.World world, @Nonnull BlockPos pos)
+	{
+		return getBlockSnapshot(world, pos, Blocks.AIR.getDefaultState());
+	}
+
+	@Nonnull
+	public static BlockSnapshot getBlockSnapshot(
+			@Nonnull org.spongepowered.api.world.World world, @Nonnull BlockPos pos, @Nonnull IBlockState blockState)
 	{
 		BlockSnapshot.Builder builder = Sponge.getRegistry().createBuilder(BlockSnapshot.Builder.class);
 		builder.world(world.getProperties());
-		builder.blockState(getState(BlockTypes.AIR));
+		builder.blockState(getState(blockState));
 		builder.position(new Vector3i(pos.getX(), pos.getY(), pos.getZ()));
 		return builder.build();
 	}
@@ -83,7 +96,7 @@ public final class SpongeUtils
 	@Nonnull
 	public static org.spongepowered.api.world.World getWorld(@Nonnull World world)
 	{
-		return (org.spongepowered.api.world.World) world;
+		return unsafeCast(world);
 	}
 
 	@Nonnull
@@ -111,6 +124,13 @@ public final class SpongeUtils
 	@Nonnull
 	public static HandType getHandType(@Nonnull EnumHand hand)
 	{
-		return hand == EnumHand.MAIN_HAND ? HandTypes.MAIN_HAND : HandTypes.OFF_HAND;
+		// return hand == EnumHand.MAIN_HAND ? HandTypes.MAIN_HAND : HandTypes.OFF_HAND;
+		return unsafeCast(hand);
+	}
+
+	@SuppressWarnings("unchecked")
+	private static <T> T unsafeCast(Object object)
+	{
+		return (T) object;
 	}
 }
