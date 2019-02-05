@@ -52,14 +52,15 @@ public class CooldownManager<T>
 	@SubscribeEvent
 	public void onTick(TickEvent.ServerTickEvent event)
 	{
-		for (TObjectLongIterator<T> iterator = this.cooldowns.iterator(); iterator.hasNext(); )
-		{
-			iterator.advance();
-			long timer = iterator.value() - 1;
-			if (timer <= 0)
-				iterator.remove();
-			else
-				iterator.setValue(timer);
-		}
+		if (event.phase == TickEvent.Phase.END)
+			for (TObjectLongIterator<T> iterator = this.cooldowns.iterator(); iterator.hasNext(); )
+			{
+				iterator.advance();
+				long timer = iterator.value() - 1;
+				if (timer <= 0)
+					iterator.remove();
+				else
+					iterator.setValue(timer);
+			}
 	}
 }
