@@ -16,6 +16,7 @@ import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 
@@ -112,9 +113,9 @@ public final class BukkitIntegration
 		{
 			Player bukkitPlayer = getPlayer(player);
 			PlayerInventory inventory = bukkitPlayer.getInventory();
-			ItemStack stack = (ItemStack) inventory;
+			ItemStack stack = hand == EnumHand.MAIN_HAND ? inventory.getItemInMainHand() : inventory.getItemInOffHand();
 			Block block = bukkitPlayer.getWorld().getBlockAt(targetPos.getX(), targetPos.getY(), targetPos.getZ());
-			PlayerInteractEvent event = new PlayerInteractEvent(bukkitPlayer, Action.RIGHT_CLICK_BLOCK, stack, block, getBlockFace(targetSide));
+			PlayerInteractEvent event = new PlayerInteractEvent(bukkitPlayer, Action.RIGHT_CLICK_BLOCK, stack, block, getBlockFace(targetSide), hand == EnumHand.MAIN_HAND ? EquipmentSlot.HAND : EquipmentSlot.OFF_HAND);
 			Bukkit.getPluginManager().callEvent(event);
 			return event.isCancelled();
 		}
