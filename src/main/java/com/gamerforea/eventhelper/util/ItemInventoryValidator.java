@@ -2,6 +2,7 @@ package com.gamerforea.eventhelper.util;
 
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.InventoryPlayer;
+import net.minecraft.init.Items;
 import net.minecraft.inventory.ClickType;
 import net.minecraft.inventory.Slot;
 import net.minecraft.item.Item;
@@ -20,8 +21,10 @@ public final class ItemInventoryValidator
 	public static final String NBT_KEY_ID = "UID";
 	private static final Random RANDOM = new Random();
 
-	@Nullable
-	private final ItemStack stack;
+	@Nonnull
+	private final Item item;
+	private final int uniqueId;
+
 	@Nonnull
 	private final String nbtIdKey;
 	@Nullable
@@ -80,22 +83,34 @@ public final class ItemInventoryValidator
 			@Nullable String nbtKeyId, boolean generateIdIfAbsent,
 			@Nullable Predicate<Item> itemValidator, @Nullable Function<EntityPlayer, ItemStack> stackGetter)
 	{
-		this.stack = stack;
+		this.item = stack == null ? Items.AIR : stack.getItem();
+		int uniqueId = 0;
 		this.nbtIdKey = nbtKeyId = StringUtils.defaultIfBlank(nbtKeyId, NBT_KEY_ID);
 		this.itemValidator = itemValidator;
 		this.stackGetter = stackGetter;
 
-		if (generateIdIfAbsent && stack != null && !stack.isEmpty() && (itemValidator == null || itemValidator.test(stack.getItem())))
+		if (stack != null && !stack.isEmpty() && (itemValidator == null || itemValidator.test(stack.getItem())))
 		{
 			NBTTagCompound nbt = stack.getTagCompound();
-			if (nbt == null)
+			if (nbt == null && generateIdIfAbsent)
 			{
 				nbt = new NBTTagCompound();
 				stack.setTagCompound(nbt);
 			}
-			if (!nbt.hasKey(nbtKeyId))
-				nbt.setInteger(nbtKeyId, RANDOM.nextInt());
+
+			if (nbt != null)
+			{
+				if (nbt.hasKey(nbtKeyId))
+					uniqueId = nbt.getInteger(nbtKeyId);
+				else
+				{
+					uniqueId = RANDOM.nextInt();
+					nbt.setInteger(nbtKeyId, uniqueId);
+				}
+			}
 		}
+
+		this.uniqueId = uniqueId;
 	}
 
 	public boolean isItemInHotbar()
@@ -148,7 +163,8 @@ public final class ItemInventoryValidator
 	{
 		if (this.itemInHotbar && this.slotIndex >= 0 && this.slotIndex != player.inventory.currentItem)
 			return false;
-		if (this.stack != null && !this.stack.isEmpty())
+
+		if (this.item != Items.AIR)
 		{
 			ItemStack stackToCheck;
 			if (this.stackGetter == null)
@@ -159,8 +175,9 @@ public final class ItemInventoryValidator
 			}
 			else
 				stackToCheck = this.stackGetter.apply(player);
-			return stackToCheck != null && (this.itemValidator == null || this.itemValidator.test(stackToCheck.getItem())) && this.isSameItemInventory(this.stack, stackToCheck);
+			return stackToCheck != null && (this.itemValidator == null || this.itemValidator.test(stackToCheck.getItem())) && this.isSameItemInventory(stackToCheck);
 		}
+
 		return true;
 	}
 
@@ -173,19 +190,14 @@ public final class ItemInventoryValidator
 		return this.canInteractWith(player);
 	}
 
-	private boolean isSameItemInventory(@Nullable ItemStack base, @Nullable ItemStack comparison)
+	private boolean isSameItemInventory(@Nullable ItemStack comparison)
 	{
-		if (base == null || comparison == null || base.isEmpty() || comparison.isEmpty())
+		if (comparison == null || comparison.isEmpty())
+			return false;
+		if (this.item != comparison.getItem())
 			return false;
 
-		if (base.getItem() != comparison.getItem())
-			return false;
-
-		if (!base.hasTagCompound() || !comparison.hasTagCompound())
-			return false;
-
-		String baseUID = base.getTagCompound().getString(this.nbtIdKey);
-		String comparisonUID = comparison.getTagCompound().getString(this.nbtIdKey);
-		return baseUID.equals(comparisonUID);
+		NBTTagCompound comparisonNbt = comparison.getTagCompound();
+		return comparisonNbt != null && this.uniqueId == comparisonNbt.getInteger(this.nbtIdKey);
 	}
 }
