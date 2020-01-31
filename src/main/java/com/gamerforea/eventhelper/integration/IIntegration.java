@@ -1,5 +1,6 @@
 package com.gamerforea.eventhelper.integration;
 
+import com.gamerforea.eventhelper.cause.ICauseStackManager;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
@@ -11,6 +12,7 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraftforge.fml.server.FMLServerHandler;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.util.UUID;
 
 public interface IIntegration
@@ -59,5 +61,11 @@ public interface IIntegration
 			return false;
 		EntityPlayer player = playerList.getPlayerByUsername(playerName);
 		return player != null && this.hasPermission(player, permission);
+	}
+
+	@Nullable
+	default ICauseStackManager getSpecificCauseStackManager()
+	{
+		return null;
 	}
 }

@@ -2,7 +2,9 @@ package com.gamerforea.eventhelper.integration.sponge;
 
 import com.flowpowered.math.vector.Vector3d;
 import com.gamerforea.eventhelper.EventHelperMod;
+import com.gamerforea.eventhelper.cause.ICauseStackManager;
 import com.gamerforea.eventhelper.integration.IIntegration;
+import com.gamerforea.eventhelper.integration.sponge.cause.SpongeCauseStackManager;
 import com.google.common.collect.ImmutableList;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
@@ -181,6 +183,12 @@ public final class SpongeIntegration
 		{
 			Optional<User> user = getUser(playerName);
 			return user.isPresent() && user.get().hasPermission(permission);
+		}
+
+		@Override
+		public ICauseStackManager getSpecificCauseStackManager()
+		{
+			return SpongeCauseStackManager.INSTANCE;
 		}
 	}
 }

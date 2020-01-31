@@ -1,6 +1,8 @@
 package com.gamerforea.eventhelper.util;
 
 import com.gamerforea.eventhelper.EventHelperMod;
+import com.gamerforea.eventhelper.cause.DummyCauseStackManager;
+import com.gamerforea.eventhelper.cause.ICauseStackManager;
 import com.gamerforea.eventhelper.integration.IIntegration;
 import com.gamerforea.eventhelper.integration.bukkit.BukkitIntegration;
 import com.gamerforea.eventhelper.integration.sponge.SpongeIntegration;
@@ -161,6 +163,12 @@ public final class EventUtils
 				throwable.printStackTrace();
 			return false;
 		}
+	}
+
+	public static ICauseStackManager getCauseStackManager()
+	{
+		ICauseStackManager specificCauseStackManager = INTEGRATION.getSpecificCauseStackManager();
+		return specificCauseStackManager == null ? DummyCauseStackManager.INSTANCE : specificCauseStackManager;
 	}
 
 	static
