@@ -68,7 +68,7 @@ public class EntitySmallFireballByPlayer extends EntitySmallFireball
 				if (allowGriefing)
 				{
 					BlockPos pos = result.getBlockPos().offset(result.sideHit);
-					if (this.world.isAirBlock(pos) && !this.fake.cantBreak(pos))
+					if (this.world.isAirBlock(pos) && !this.fake.cantPlace(pos, Blocks.FIRE.getDefaultState()))
 						this.world.setBlockState(pos, Blocks.FIRE.getDefaultState());
 				}
 			}
