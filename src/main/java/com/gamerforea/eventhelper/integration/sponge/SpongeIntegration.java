@@ -36,6 +36,7 @@ import static org.spongepowered.api.event.SpongeEventFactory.*;
 
 public final class SpongeIntegration
 {
+	public static final String SPONGE_API_MODID = "spongeapi";
 	private static final IIntegration INTEGRATION;
 
 	private SpongeIntegration()
