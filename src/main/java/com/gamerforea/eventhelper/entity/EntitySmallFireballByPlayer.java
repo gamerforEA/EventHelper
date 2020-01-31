@@ -15,6 +15,7 @@ import net.minecraftforge.event.ForgeEventFactory;
 
 import javax.annotation.Nonnull;
 
+@Deprecated
 public class EntitySmallFireballByPlayer extends EntitySmallFireball
 {
 	public final FakePlayerContainer fake;

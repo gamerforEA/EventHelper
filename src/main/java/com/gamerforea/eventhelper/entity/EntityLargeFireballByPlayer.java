@@ -14,6 +14,7 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 
 import javax.annotation.Nonnull;
 
+@Deprecated
 public class EntityLargeFireballByPlayer extends EntityLargeFireball
 {
 	public final FakePlayerContainer fake;

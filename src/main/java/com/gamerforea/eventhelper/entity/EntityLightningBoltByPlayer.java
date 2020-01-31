@@ -17,6 +17,7 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 
 import javax.annotation.Nonnull;
 
+@Deprecated
 @Mod.EventBusSubscriber(modid = ModConstants.MODID)
 public class EntityLightningBoltByPlayer extends EntityLightningBolt
 {
