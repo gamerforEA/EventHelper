@@ -1,5 +1,6 @@
 package com.gamerforea.eventhelper.util;
 
+import com.gamerforea.eventhelper.ModConstants;
 import com.gamerforea.eventhelper.fake.FakePlayerContainer;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
@@ -8,15 +9,16 @@ import net.minecraft.network.play.server.SPacketExplosion;
 import net.minecraft.world.Explosion;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
-import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.ForgeEventFactory;
 import net.minecraftforge.event.world.ExplosionEvent;
+import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.eventhandler.EventPriority;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
+@Mod.EventBusSubscriber(modid = ModConstants.MODID)
 public class ExplosionByPlayer extends Explosion
 {
 	private final EntityPlayer player;
@@ -36,7 +38,6 @@ public class ExplosionByPlayer extends Explosion
 	{
 		super(world, exploder, x, y, z, size, flaming, damagesTerrain);
 		this.player = player;
-		ExplosionHandler.init();
 	}
 
 	@Nonnull
@@ -102,30 +103,17 @@ public class ExplosionByPlayer extends Explosion
 		return explosion;
 	}
 
-	private static final class ExplosionHandler
+	@Deprecated
+	@SubscribeEvent(priority = EventPriority.HIGHEST)
+	public static void onDetonate(ExplosionEvent.Detonate event)
 	{
-		private static boolean initialized;
-
-		public static void init()
+		Explosion explosion = event.getExplosion();
+		if (explosion instanceof ExplosionByPlayer)
 		{
-			if (!initialized)
-			{
-				initialized = true;
-				MinecraftForge.EVENT_BUS.register(new ExplosionHandler());
-			}
-		}
-
-		@SubscribeEvent(priority = EventPriority.HIGHEST)
-		public void onDetonate(ExplosionEvent.Detonate event)
-		{
-			Explosion explosion = event.getExplosion();
-			if (explosion instanceof ExplosionByPlayer)
-			{
-				ExplosionByPlayer explosionByPlayer = (ExplosionByPlayer) explosion;
-				EntityPlayer player = explosionByPlayer.player;
-				event.getAffectedBlocks().removeIf(pos -> EventUtils.cantBreak(player, pos));
-				event.getAffectedEntities().removeIf(entity -> EventUtils.cantAttack(player, entity));
-			}
+			ExplosionByPlayer explosionByPlayer = (ExplosionByPlayer) explosion;
+			EntityPlayer player = explosionByPlayer.player;
+			event.getAffectedBlocks().removeIf(pos -> EventUtils.cantBreak(player, pos));
+			event.getAffectedEntities().removeIf(entity -> EventUtils.cantAttack(player, entity));
 		}
 	}
 }

@@ -1,17 +1,24 @@
 package com.gamerforea.eventhelper.util;
 
+import com.gamerforea.eventhelper.ModConstants;
 import gnu.trove.iterator.TObjectLongIterator;
 import gnu.trove.map.TObjectLongMap;
 import gnu.trove.map.hash.TObjectLongHashMap;
-import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 
 import javax.annotation.Nonnull;
+import java.lang.ref.WeakReference;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+@Mod.EventBusSubscriber(modid = ModConstants.MODID)
 public class CooldownManager<T>
 {
+	private static final List<WeakReference<CooldownManager<?>>> COOLDOWN_MANAGERS = new ArrayList<>();
 	private final TObjectLongMap<T> cooldowns = new TObjectLongHashMap<>();
 	private final long cooldown;
 
@@ -24,7 +31,10 @@ public class CooldownManager<T>
 	{
 		this.cooldown = Math.max(0, cooldownInTicks);
 		if (this.cooldown > 0)
-			MinecraftForge.EVENT_BUS.register(this);
+			synchronized (COOLDOWN_MANAGERS)
+			{
+				COOLDOWN_MANAGERS.add(new WeakReference<>(this));
+			}
 	}
 
 	public boolean canAdd(@Nonnull T key)
@@ -49,18 +59,34 @@ public class CooldownManager<T>
 		return this.cooldown <= 0 ? 0 : this.cooldowns.get(key);
 	}
 
+	@Deprecated
 	@SubscribeEvent
-	public void onTick(TickEvent.ServerTickEvent event)
+	public static void onTick(TickEvent.ServerTickEvent event)
 	{
-		if (event.phase == TickEvent.Phase.END)
-			for (TObjectLongIterator<T> iterator = this.cooldowns.iterator(); iterator.hasNext(); )
+		if (event.phase != TickEvent.Phase.END)
+			return;
+
+		synchronized (COOLDOWN_MANAGERS)
+		{
+			for (Iterator<WeakReference<CooldownManager<?>>> it = COOLDOWN_MANAGERS.iterator(); it.hasNext(); )
 			{
-				iterator.advance();
-				long timer = iterator.value() - 1;
-				if (timer <= 0)
-					iterator.remove();
-				else
-					iterator.setValue(timer);
+				CooldownManager<?> cooldownManager = it.next().get();
+				if (cooldownManager == null)
+				{
+					it.remove();
+					continue;
+				}
+
+				for (TObjectLongIterator<?> iterator = cooldownManager.cooldowns.iterator(); iterator.hasNext(); )
+				{
+					iterator.advance();
+					long timer = iterator.value() - 1;
+					if (timer <= 0)
+						iterator.remove();
+					else
+						iterator.setValue(timer);
+				}
 			}
+		}
 	}
 }
