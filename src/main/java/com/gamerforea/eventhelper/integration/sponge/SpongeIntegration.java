@@ -25,6 +25,7 @@ import org.spongepowered.api.event.cause.Cause;
 import org.spongepowered.api.event.cause.EventContextKeys;
 import org.spongepowered.api.service.permission.Subject;
 import org.spongepowered.api.util.Direction;
+import org.spongepowered.api.util.Tristate;
 import org.spongepowered.api.world.World;
 
 import javax.annotation.Nonnull;
@@ -143,7 +144,8 @@ public final class SpongeIntegration
 		public boolean cantInteract(
 				@Nonnull EntityPlayer player,
 				@Nonnull EnumHand hand,
-				@Nonnull BlockPos interactionPos, @Nonnull BlockPos targetPos, @Nonnull EnumFacing targetSide)
+				@Nonnull BlockPos interactionPos,
+				@Nonnull BlockPos targetPos, @Nonnull EnumFacing targetSide, @Nonnull BlockInteractAction action)
 		{
 			try (CauseStackManager.StackFrame stackFrame = Sponge.getGame().getCauseStackManager().pushCauseFrame())
 			{
@@ -157,7 +159,23 @@ public final class SpongeIntegration
 				World world = getWorld(player.world);
 				BlockSnapshot block = world.createSnapshot(targetPos.getX(), targetPos.getY(), targetPos.getZ());
 				Direction targetSideSponge = getDirection(targetSide);
-				Event event = hand == EnumHand.MAIN_HAND ? createInteractBlockEventPrimaryMainHand(cause, handType, interactionPoint, block, targetSideSponge) : createInteractBlockEventPrimaryOffHand(cause, handType, interactionPoint, block, targetSideSponge);
+
+				Event event;
+				if (hand == EnumHand.MAIN_HAND)
+				{
+					if (action == BlockInteractAction.RIGHT_CLICK)
+						event = createInteractBlockEventSecondaryMainHand(cause, Tristate.UNDEFINED, Tristate.UNDEFINED, Tristate.UNDEFINED, Tristate.UNDEFINED, handType, interactionPoint, block, targetSideSponge);
+					else
+						event = createInteractBlockEventPrimaryMainHand(cause, handType, interactionPoint, block, targetSideSponge);
+				}
+				else
+				{
+					if (action == BlockInteractAction.RIGHT_CLICK)
+						event = createInteractBlockEventSecondaryOffHand(cause, Tristate.UNDEFINED, Tristate.UNDEFINED, Tristate.UNDEFINED, Tristate.UNDEFINED, handType, interactionPoint, block, targetSideSponge);
+					else
+						event = createInteractBlockEventPrimaryOffHand(cause, handType, interactionPoint, block, targetSideSponge);
+				}
+
 				return Sponge.getEventManager().post(event);
 			}
 		}

@@ -109,13 +109,14 @@ public final class BukkitIntegration
 		public boolean cantInteract(
 				@Nonnull EntityPlayer player,
 				@Nonnull EnumHand hand,
-				@Nonnull BlockPos interactionPos, @Nonnull BlockPos targetPos, @Nonnull EnumFacing targetSide)
+				@Nonnull BlockPos interactionPos,
+				@Nonnull BlockPos targetPos, @Nonnull EnumFacing targetSide, @Nonnull BlockInteractAction action)
 		{
 			Player bukkitPlayer = getPlayer(player);
 			PlayerInventory inventory = bukkitPlayer.getInventory();
 			ItemStack stack = hand == EnumHand.MAIN_HAND ? inventory.getItemInMainHand() : inventory.getItemInOffHand();
 			Block block = bukkitPlayer.getWorld().getBlockAt(targetPos.getX(), targetPos.getY(), targetPos.getZ());
-			PlayerInteractEvent event = new PlayerInteractEvent(bukkitPlayer, Action.RIGHT_CLICK_BLOCK, stack, block, getBlockFace(targetSide), hand == EnumHand.MAIN_HAND ? EquipmentSlot.HAND : EquipmentSlot.OFF_HAND);
+			PlayerInteractEvent event = new PlayerInteractEvent(bukkitPlayer, action == BlockInteractAction.RIGHT_CLICK ? Action.RIGHT_CLICK_BLOCK : Action.LEFT_CLICK_BLOCK, stack, block, getBlockFace(targetSide), hand == EnumHand.MAIN_HAND ? EquipmentSlot.HAND : EquipmentSlot.OFF_HAND);
 			Bukkit.getPluginManager().callEvent(event);
 			return event.isCancelled();
 		}

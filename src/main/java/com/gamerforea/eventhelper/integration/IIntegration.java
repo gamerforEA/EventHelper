@@ -32,10 +32,27 @@ public interface IIntegration
 		return this.cantInteract(player, hand, targetPos, targetPos, targetSide);
 	}
 
+	default boolean cantInteract(
+			@Nonnull EntityPlayer player,
+			@Nonnull EnumHand hand,
+			@Nonnull BlockPos interactionPos, @Nonnull BlockPos targetPos, @Nonnull EnumFacing targetSide)
+	{
+		return this.cantInteract(player, hand, interactionPos, targetPos, targetSide, BlockInteractAction.RIGHT_CLICK);
+	}
+
+	default boolean cantInteract(
+			@Nonnull EntityPlayer player,
+			@Nonnull EnumHand hand,
+			@Nonnull BlockPos targetPos, @Nonnull EnumFacing targetSide, @Nonnull BlockInteractAction action)
+	{
+		return this.cantInteract(player, hand, targetPos, targetPos, targetSide, action);
+	}
+
 	boolean cantInteract(
 			@Nonnull EntityPlayer player,
 			@Nonnull EnumHand hand,
-			@Nonnull BlockPos interactionPos, @Nonnull BlockPos targetPos, @Nonnull EnumFacing targetSide);
+			@Nonnull BlockPos interactionPos,
+			@Nonnull BlockPos targetPos, @Nonnull EnumFacing targetSide, @Nonnull BlockInteractAction action);
 
 	boolean hasPermission(@Nonnull EntityPlayer player, @Nonnull String permission);
 
@@ -67,5 +84,11 @@ public interface IIntegration
 	default ICauseStackManager getSpecificCauseStackManager()
 	{
 		return null;
+	}
+
+	enum BlockInteractAction
+	{
+		RIGHT_CLICK,
+		LEFT_CLICK
 	}
 }

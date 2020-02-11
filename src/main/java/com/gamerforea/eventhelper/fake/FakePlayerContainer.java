@@ -1,5 +1,6 @@
 package com.gamerforea.eventhelper.fake;
 
+import com.gamerforea.eventhelper.integration.IIntegration;
 import com.gamerforea.eventhelper.util.EventUtils;
 import com.gamerforea.eventhelper.util.ExplosionByPlayer;
 import com.gamerforea.eventhelper.util.FastUtils;
@@ -166,6 +167,23 @@ public abstract class FakePlayerContainer
 			@Nonnull BlockPos interactionPos, @Nonnull BlockPos targetPos, @Nonnull EnumFacing targetSide)
 	{
 		return EventUtils.cantInteract(this.getPlayer(), hand, interactionPos, targetPos, targetSide);
+	}
+
+	public final boolean cantInteract(
+			@Nonnull EnumHand hand,
+			@Nonnull BlockPos targetPos,
+			@Nonnull EnumFacing targetSide, @Nonnull IIntegration.BlockInteractAction action)
+	{
+		return EventUtils.cantInteract(this.getPlayer(), hand, targetPos, targetSide, action);
+	}
+
+	public final boolean cantInteract(
+			@Nonnull EnumHand hand,
+			@Nonnull BlockPos interactionPos,
+			@Nonnull BlockPos targetPos,
+			@Nonnull EnumFacing targetSide, @Nonnull IIntegration.BlockInteractAction action)
+	{
+		return EventUtils.cantInteract(this.getPlayer(), hand, interactionPos, targetPos, targetSide, action);
 	}
 
 	@Nonnull
