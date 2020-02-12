@@ -169,21 +169,9 @@ public abstract class FakePlayerContainer
 		return EventUtils.cantInteract(this.getPlayer(), hand, interactionPos, targetPos, targetSide);
 	}
 
-	public final boolean cantInteract(
-			@Nonnull EnumHand hand,
-			@Nonnull BlockPos targetPos,
-			@Nonnull EnumFacing targetSide, @Nonnull IIntegration.BlockInteractAction action)
+	public final boolean cantInteract(@Nonnull IIntegration.BlockInteractParams params)
 	{
-		return EventUtils.cantInteract(this.getPlayer(), hand, targetPos, targetSide, action);
-	}
-
-	public final boolean cantInteract(
-			@Nonnull EnumHand hand,
-			@Nonnull BlockPos interactionPos,
-			@Nonnull BlockPos targetPos,
-			@Nonnull EnumFacing targetSide, @Nonnull IIntegration.BlockInteractAction action)
-	{
-		return EventUtils.cantInteract(this.getPlayer(), hand, interactionPos, targetPos, targetSide, action);
+		return EventUtils.cantInteract(this.getPlayer(), params);
 	}
 
 	@Nonnull

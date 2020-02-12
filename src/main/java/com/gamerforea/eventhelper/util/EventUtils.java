@@ -120,39 +120,15 @@ public final class EventUtils
 		}
 	}
 
-	public static boolean cantInteract(
-			@Nonnull EntityPlayer player,
-			@Nonnull EnumHand hand,
-			@Nonnull BlockPos targetPos,
-			@Nonnull EnumFacing targetSide, @Nonnull IIntegration.BlockInteractAction action)
+	public static boolean cantInteract(@Nonnull EntityPlayer player, @Nonnull IIntegration.BlockInteractParams params)
 	{
 		try
 		{
-			return INTEGRATION.cantInteract(player, hand, targetPos, targetSide, action);
+			return INTEGRATION.cantInteract(player, params);
 		}
 		catch (Throwable throwable)
 		{
-			LOGGER.error("Failed call interact event: [Player: {}, Hand: {}, Pos: {}, Side: {}, Action: {}]", player, hand, targetPos, targetSide, action);
-			if (EventHelperMod.debug)
-				throwable.printStackTrace();
-			return true;
-		}
-	}
-
-	public static boolean cantInteract(
-			@Nonnull EntityPlayer player,
-			@Nonnull EnumHand hand,
-			@Nonnull BlockPos interactionPos,
-			@Nonnull BlockPos targetPos,
-			@Nonnull EnumFacing targetSide, @Nonnull IIntegration.BlockInteractAction action)
-	{
-		try
-		{
-			return INTEGRATION.cantInteract(player, hand, interactionPos, targetPos, targetSide, action);
-		}
-		catch (Throwable throwable)
-		{
-			LOGGER.error("Failed call interact event: [Player: {}, Hand: {}, Pos: {}, Side: {}, Action: {}]", player, hand, targetPos, targetSide, action);
+			LOGGER.error("Failed call interact event: [Player: {}, Params: {}]", player, params);
 			if (EventHelperMod.debug)
 				throwable.printStackTrace();
 			return true;

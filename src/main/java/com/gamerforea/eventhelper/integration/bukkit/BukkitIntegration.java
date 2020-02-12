@@ -5,7 +5,6 @@ import com.gamerforea.eventhelper.integration.IIntegration;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.math.BlockPos;
 import org.bukkit.Bukkit;
@@ -106,17 +105,13 @@ public final class BukkitIntegration
 		}
 
 		@Override
-		public boolean cantInteract(
-				@Nonnull EntityPlayer player,
-				@Nonnull EnumHand hand,
-				@Nonnull BlockPos interactionPos,
-				@Nonnull BlockPos targetPos, @Nonnull EnumFacing targetSide, @Nonnull BlockInteractAction action)
+		public boolean cantInteract(@Nonnull EntityPlayer player, @Nonnull BlockInteractParams params)
 		{
 			Player bukkitPlayer = getPlayer(player);
 			PlayerInventory inventory = bukkitPlayer.getInventory();
-			ItemStack stack = hand == EnumHand.MAIN_HAND ? inventory.getItemInMainHand() : inventory.getItemInOffHand();
-			Block block = bukkitPlayer.getWorld().getBlockAt(targetPos.getX(), targetPos.getY(), targetPos.getZ());
-			PlayerInteractEvent event = new PlayerInteractEvent(bukkitPlayer, action == BlockInteractAction.RIGHT_CLICK ? Action.RIGHT_CLICK_BLOCK : Action.LEFT_CLICK_BLOCK, stack, block, getBlockFace(targetSide), hand == EnumHand.MAIN_HAND ? EquipmentSlot.HAND : EquipmentSlot.OFF_HAND);
+			ItemStack stack = params.getHand() == EnumHand.MAIN_HAND ? inventory.getItemInMainHand() : inventory.getItemInOffHand();
+			Block block = bukkitPlayer.getWorld().getBlockAt(params.getTargetPos().getX(), params.getTargetPos().getY(), params.getTargetPos().getZ());
+			PlayerInteractEvent event = new PlayerInteractEvent(bukkitPlayer, params.getAction() == BlockInteractAction.RIGHT_CLICK ? Action.RIGHT_CLICK_BLOCK : Action.LEFT_CLICK_BLOCK, stack, block, getBlockFace(params.getTargetSide()), params.getHand() == EnumHand.MAIN_HAND ? EquipmentSlot.HAND : EquipmentSlot.OFF_HAND);
 			Bukkit.getPluginManager().callEvent(event);
 			return event.isCancelled();
 		}

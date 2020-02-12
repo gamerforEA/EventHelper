@@ -9,7 +9,6 @@ import com.google.common.collect.ImmutableList;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.math.BlockPos;
 import net.minecraftforge.common.util.FakePlayer;
@@ -79,6 +78,8 @@ public final class SpongeIntegration
 
 	private static final class SpongeIntegration0 implements IIntegration
 	{
+		private Optional<EventContextKey<Boolean>> forceRegionProtectionKey;
+
 		private SpongeIntegration0()
 		{
 		}
@@ -141,11 +142,7 @@ public final class SpongeIntegration
 		}
 
 		@Override
-		public boolean cantInteract(
-				@Nonnull EntityPlayer player,
-				@Nonnull EnumHand hand,
-				@Nonnull BlockPos interactionPos,
-				@Nonnull BlockPos targetPos, @Nonnull EnumFacing targetSide, @Nonnull BlockInteractAction action)
+		public boolean cantInteract(@Nonnull EntityPlayer player, @Nonnull BlockInteractParams params)
 		{
 			try (CauseStackManager.StackFrame stackFrame = Sponge.getGame().getCauseStackManager().pushCauseFrame())
 			{
@@ -154,23 +151,23 @@ public final class SpongeIntegration
 					stackFrame.addContext(EventContextKeys.FAKE_PLAYER, (Player) player);
 
 				Cause cause = stackFrame.getCurrentCause();
-				HandType handType = getHandType(hand);
-				Optional<Vector3d> interactionPoint = Optional.of(new Vector3d(interactionPos.getX(), interactionPos.getY(), interactionPos.getZ()));
+				HandType handType = getHandType(params.getHand());
+				Optional<Vector3d> interactionPoint = Optional.of(new Vector3d(params.getInteractionPos().getX(), params.getInteractionPos().getY(), params.getInteractionPos().getZ()));
 				World world = getWorld(player.world);
-				BlockSnapshot block = world.createSnapshot(targetPos.getX(), targetPos.getY(), targetPos.getZ());
-				Direction targetSideSponge = getDirection(targetSide);
+				BlockSnapshot block = world.createSnapshot(params.getTargetPos().getX(), params.getTargetPos().getY(), params.getTargetPos().getZ());
+				Direction targetSideSponge = getDirection(params.getTargetSide());
 
 				Event event;
-				if (hand == EnumHand.MAIN_HAND)
+				if (params.getHand() == EnumHand.MAIN_HAND)
 				{
-					if (action == BlockInteractAction.RIGHT_CLICK)
+					if (params.getAction() == BlockInteractAction.RIGHT_CLICK)
 						event = createInteractBlockEventSecondaryMainHand(cause, Tristate.UNDEFINED, Tristate.UNDEFINED, Tristate.UNDEFINED, Tristate.UNDEFINED, handType, interactionPoint, block, targetSideSponge);
 					else
 						event = createInteractBlockEventPrimaryMainHand(cause, handType, interactionPoint, block, targetSideSponge);
 				}
 				else
 				{
-					if (action == BlockInteractAction.RIGHT_CLICK)
+					if (params.getAction() == BlockInteractAction.RIGHT_CLICK)
 						event = createInteractBlockEventSecondaryOffHand(cause, Tristate.UNDEFINED, Tristate.UNDEFINED, Tristate.UNDEFINED, Tristate.UNDEFINED, handType, interactionPoint, block, targetSideSponge);
 					else
 						event = createInteractBlockEventPrimaryOffHand(cause, handType, interactionPoint, block, targetSideSponge);
