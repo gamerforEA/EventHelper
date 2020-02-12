@@ -21,6 +21,7 @@ import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.entity.living.player.User;
 import org.spongepowered.api.event.CauseStackManager;
 import org.spongepowered.api.event.Event;
+import org.spongepowered.api.event.block.InteractBlockEvent;
 import org.spongepowered.api.event.cause.Cause;
 import org.spongepowered.api.event.cause.EventContextKey;
 import org.spongepowered.api.event.cause.EventContextKeys;
@@ -79,6 +80,7 @@ public final class SpongeIntegration
 	private static final class SpongeIntegration0 implements IIntegration
 	{
 		private final Deque<BlockInteractParams> blockInteractStack = new ArrayDeque<>();
+		@Nullable
 		private Optional<EventContextKey<Boolean>> forceRegionProtectionKey;
 
 		private SpongeIntegration0()
@@ -98,7 +100,7 @@ public final class SpongeIntegration
 				World world = getWorld(player.world);
 				BlockSnapshot original = world.createSnapshot(pos.getX(), pos.getY(), pos.getZ());
 				Transaction<BlockSnapshot> transaction = new Transaction<>(original, getAirSnapshot(world, pos));
-				return Sponge.getEventManager().post(createChangeBlockEventBreak(cause, ImmutableList.of(transaction)));
+				return post(createChangeBlockEventBreak(cause, ImmutableList.of(transaction)));
 			}
 		}
 
@@ -115,7 +117,7 @@ public final class SpongeIntegration
 				World world = getWorld(player.world);
 				BlockSnapshot original = world.createSnapshot(pos.getX(), pos.getY(), pos.getZ());
 				Transaction<BlockSnapshot> transaction = new Transaction<>(original, getBlockSnapshot(world, pos, blockState));
-				return Sponge.getEventManager().post(createChangeBlockEventPlace(cause, ImmutableList.of(transaction)));
+				return post(createChangeBlockEventPlace(cause, ImmutableList.of(transaction)));
 			}
 		}
 
@@ -138,7 +140,7 @@ public final class SpongeIntegration
 				Cause cause = stackFrame.getCurrentCause();
 				org.spongepowered.api.entity.Entity spongeVictim = (org.spongepowered.api.entity.Entity) victim;
 				Event event = createAttackEntityEvent(cause, new ArrayList<>(), spongeVictim, 0, 0);
-				return Sponge.getEventManager().post(event);
+				return post(event);
 			}
 		}
 
@@ -182,23 +184,24 @@ public final class SpongeIntegration
 				BlockSnapshot block = world.createSnapshot(params.getTargetPos().getX(), params.getTargetPos().getY(), params.getTargetPos().getZ());
 				Direction targetSideSponge = getDirection(params.getTargetSide());
 
-				Event event;
-				if (params.getHand() == EnumHand.MAIN_HAND)
+				if (params.getAction() == BlockInteractAction.RIGHT_CLICK)
 				{
-					if (params.getAction() == BlockInteractAction.RIGHT_CLICK)
+					InteractBlockEvent.Secondary event;
+					if (params.getHand() == EnumHand.MAIN_HAND)
 						event = createInteractBlockEventSecondaryMainHand(cause, Tristate.UNDEFINED, Tristate.UNDEFINED, Tristate.UNDEFINED, Tristate.UNDEFINED, handType, interactionPoint, block, targetSideSponge);
 					else
-						event = createInteractBlockEventPrimaryMainHand(cause, handType, interactionPoint, block, targetSideSponge);
+						event = createInteractBlockEventSecondaryOffHand(cause, Tristate.UNDEFINED, Tristate.UNDEFINED, Tristate.UNDEFINED, Tristate.UNDEFINED, handType, interactionPoint, block, targetSideSponge);
+					return post(event) || event.getUseBlockResult() == Tristate.FALSE || event.getUseItemResult() == Tristate.FALSE;
 				}
 				else
 				{
-					if (params.getAction() == BlockInteractAction.RIGHT_CLICK)
-						event = createInteractBlockEventSecondaryOffHand(cause, Tristate.UNDEFINED, Tristate.UNDEFINED, Tristate.UNDEFINED, Tristate.UNDEFINED, handType, interactionPoint, block, targetSideSponge);
+					Event event;
+					if (params.getHand() == EnumHand.MAIN_HAND)
+						event = createInteractBlockEventPrimaryMainHand(cause, handType, interactionPoint, block, targetSideSponge);
 					else
 						event = createInteractBlockEventPrimaryOffHand(cause, handType, interactionPoint, block, targetSideSponge);
+					return post(event);
 				}
-
-				return Sponge.getEventManager().post(event);
 			}
 			finally
 			{

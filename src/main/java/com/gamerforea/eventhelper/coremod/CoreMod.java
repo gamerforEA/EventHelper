@@ -1,6 +1,8 @@
 package com.gamerforea.eventhelper.coremod;
 
 import net.minecraftforge.fml.relauncher.IFMLLoadingPlugin;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import javax.annotation.Nullable;
 import java.util.Map;
@@ -8,15 +10,17 @@ import java.util.Map;
 import static com.gamerforea.eventhelper.ModConstants.COREMOD_NAME;
 import static com.gamerforea.eventhelper.ModConstants.MC_VERSION;
 
-// Dummy coremod to prevent NoClassDefFoundError at AutomaticEventSubscriber work state (FMLConstructionEvent)
 @IFMLLoadingPlugin.Name(COREMOD_NAME)
 @IFMLLoadingPlugin.MCVersion(MC_VERSION)
+@IFMLLoadingPlugin.SortingIndex(1001)
 public final class CoreMod implements IFMLLoadingPlugin
 {
+	public static final Logger LOGGER = LogManager.getLogger(COREMOD_NAME);
+
 	@Override
 	public String[] getASMTransformerClass()
 	{
-		return new String[0];
+		return new String[] { "com.gamerforea.eventhelper.coremod.sponge.EventHelperSpongeClassTransformer" };
 	}
 
 	@Override

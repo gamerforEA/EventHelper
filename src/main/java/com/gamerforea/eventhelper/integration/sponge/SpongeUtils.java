@@ -1,6 +1,8 @@
 package com.gamerforea.eventhelper.integration.sponge;
 
 import com.flowpowered.math.vector.Vector3i;
+import com.gamerforea.eventhelper.EventHelperMod;
+import com.gamerforea.eventhelper.coremod.sponge.SpongeMethodHooks;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Blocks;
@@ -15,6 +17,7 @@ import org.spongepowered.api.block.BlockType;
 import org.spongepowered.api.data.type.HandType;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.entity.living.player.User;
+import org.spongepowered.api.event.Event;
 import org.spongepowered.api.event.cause.Cause;
 import org.spongepowered.api.event.cause.EventContext;
 import org.spongepowered.api.service.ProviderRegistration;
@@ -27,6 +30,23 @@ import java.util.UUID;
 
 public final class SpongeUtils
 {
+	public static boolean post(@Nonnull Event event)
+	{
+		boolean preventConversion = EventHelperMod.preventSponge2ForgeEventConversion;
+		if (preventConversion)
+			SpongeMethodHooks.CURRENT_EVENT.set(event);
+
+		try
+		{
+			return Sponge.getEventManager().post(event);
+		}
+		finally
+		{
+			if (preventConversion)
+				SpongeMethodHooks.CURRENT_EVENT.remove();
+		}
+	}
+
 	@Nonnull
 	public static Cause getCause(@Nonnull EntityPlayer player)
 	{

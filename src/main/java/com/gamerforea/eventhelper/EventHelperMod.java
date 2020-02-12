@@ -39,6 +39,9 @@ public final class EventHelperMod
 	@ConfigBoolean(comment = "Print warning in case of recursive protection checks with same parameters")
 	public static boolean recursionProtectionWarning = true;
 
+	@ConfigBoolean(comment = "Prevent Sponge-Forge events conversion stack overflow")
+	public static boolean preventSponge2ForgeEventConversion = true;
+
 	@ConfigBoolean(comment = "Enable additional checks to grief prevention (may be needed for Bukkit)")
 	public static boolean paranoidProtection = false;
 
