@@ -4,6 +4,7 @@ import com.flowpowered.math.vector.Vector3d;
 import com.gamerforea.eventhelper.EventHelperMod;
 import com.gamerforea.eventhelper.cause.ICauseStackManager;
 import com.gamerforea.eventhelper.integration.IIntegration;
+import com.gamerforea.eventhelper.integration.RecursionProtectionPolicy;
 import com.gamerforea.eventhelper.integration.sponge.cause.SpongeCauseStackManager;
 import com.google.common.collect.ImmutableList;
 import net.minecraft.block.state.IBlockState;
@@ -21,6 +22,7 @@ import org.spongepowered.api.entity.living.player.User;
 import org.spongepowered.api.event.CauseStackManager;
 import org.spongepowered.api.event.Event;
 import org.spongepowered.api.event.cause.Cause;
+import org.spongepowered.api.event.cause.EventContextKey;
 import org.spongepowered.api.event.cause.EventContextKeys;
 import org.spongepowered.api.service.permission.Subject;
 import org.spongepowered.api.util.Direction;
@@ -29,9 +31,7 @@ import org.spongepowered.api.world.World;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.util.ArrayList;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
 import static com.gamerforea.eventhelper.integration.sponge.SpongeUtils.*;
 import static org.spongepowered.api.event.SpongeEventFactory.*;
@@ -78,6 +78,7 @@ public final class SpongeIntegration
 
 	private static final class SpongeIntegration0 implements IIntegration
 	{
+		private final Deque<BlockInteractParams> blockInteractStack = new ArrayDeque<>();
 		private Optional<EventContextKey<Boolean>> forceRegionProtectionKey;
 
 		private SpongeIntegration0()
@@ -144,11 +145,35 @@ public final class SpongeIntegration
 		@Override
 		public boolean cantInteract(@Nonnull EntityPlayer player, @Nonnull BlockInteractParams params)
 		{
+			RecursionProtectionPolicy recursionPolicy = EventHelperMod.recursionProtectionPolicy;
+			boolean recursionWarning = EventHelperMod.recursionProtectionWarning;
+			if ((recursionPolicy != RecursionProtectionPolicy.IGNORE || recursionWarning) && this.blockInteractStack.contains(params))
+			{
+				if (recursionWarning)
+					EventHelperMod.LOGGER.warn("Recursive cantInteract call: [Player: {}, Params: {}, Params stack: {}]", player, params, this.blockInteractStack, new Throwable("Stack trace"));
+
+				switch (recursionPolicy)
+				{
+					case IGNORE:
+						break;
+					case FORCE_ALLOW:
+						return false;
+					case FORCE_DENY:
+						return true;
+				}
+			}
+
+			this.blockInteractStack.push(params);
+
 			try (CauseStackManager.StackFrame stackFrame = Sponge.getGame().getCauseStackManager().pushCauseFrame())
 			{
 				stackFrame.pushCause(player);
 				if (player instanceof FakePlayer && player instanceof Player)
 					stackFrame.addContext(EventContextKeys.FAKE_PLAYER, (Player) player);
+
+				if (this.forceRegionProtectionKey == null)
+					this.forceRegionProtectionKey = (Optional) Sponge.getRegistry().getType(EventContextKey.class, "worldguard:force_region_protection");
+				this.forceRegionProtectionKey.ifPresent(key -> stackFrame.addContext(key, Boolean.TRUE));
 
 				Cause cause = stackFrame.getCurrentCause();
 				HandType handType = getHandType(params.getHand());
@@ -174,6 +199,12 @@ public final class SpongeIntegration
 				}
 
 				return Sponge.getEventManager().post(event);
+			}
+			finally
+			{
+				BlockInteractParams lastParams = this.blockInteractStack.pop();
+				if (lastParams != params)
+					EventHelperMod.LOGGER.error("Illegal block interact params stack top entry", new IllegalStateException());
 			}
 		}
 
