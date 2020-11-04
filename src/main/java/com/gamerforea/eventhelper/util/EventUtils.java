@@ -2,6 +2,8 @@ package com.gamerforea.eventhelper.util;
 
 import com.gamerforea.eventhelper.EventHelper;
 import com.gamerforea.eventhelper.inject.InjectionManager;
+import com.gamerforea.eventhelper.util.function.ThrowableFunction;
+import com.gamerforea.eventhelper.util.function.TriFunction;
 import com.google.common.base.Strings;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
@@ -9,13 +11,18 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.world.World;
 import net.minecraftforge.common.util.ForgeDirection;
 import org.bukkit.Bukkit;
+import org.bukkit.Location;
 import org.bukkit.entity.Player;
+import org.bukkit.event.Cancellable;
+import org.bukkit.event.Event;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockFromToEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent.DamageCause;
+import org.bukkit.event.entity.EntityTeleportEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.event.player.PlayerTeleportEvent;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -111,6 +118,67 @@ public final class EventUtils
 		catch (Throwable throwable)
 		{
 			EventHelper.error(throwable, "Failed call BlockFromToEvent: [FromX: {}, FromY: {}, FromZ: {}, Direction: {}]", fromX, fromY, fromZ, String.valueOf(direction));
+			return true;
+		}
+	}
+
+	public static boolean cantTeleport(EntityPlayer player, World toWorld, double toX, double toY, double toZ)
+	{
+		return cantTeleport0(player, toWorld, toX, toY, toZ, ConvertUtils::toBukkitEntity, PlayerTeleportEvent::new, PlayerTeleportEvent.class);
+	}
+
+	public static boolean cantTeleport(EntityPlayer player, World fromWorld, double fromX, double fromY, double fromZ, World toWorld, double toX, double toY, double toZ)
+	{
+		return cantTeleport0(player, fromWorld, fromX, fromY, fromZ, toWorld, toX, toY, toZ, ConvertUtils::toBukkitEntity, PlayerTeleportEvent::new, PlayerTeleportEvent.class);
+	}
+
+	public static boolean cantTeleport(Entity entity, World toWorld, double toX, double toY, double toZ)
+	{
+		if (entity instanceof EntityPlayer)
+			return cantTeleport((EntityPlayer) entity, toWorld, toX, toY, toZ);
+		return cantTeleport0(entity, toWorld, toX, toY, toZ, ConvertUtils::toBukkitEntity, EntityTeleportEvent::new, EntityTeleportEvent.class);
+	}
+
+	public static boolean cantTeleport(Entity entity, World fromWorld, double fromX, double fromY, double fromZ, World toWorld, double toX, double toY, double toZ)
+	{
+		if (entity instanceof EntityPlayer)
+			return cantTeleport((EntityPlayer) entity, fromWorld, fromX, fromY, fromZ, toWorld, toX, toY, toZ);
+		return cantTeleport0(entity, fromWorld, fromX, fromY, fromZ, toWorld, toX, toY, toZ, ConvertUtils::toBukkitEntity, EntityTeleportEvent::new, EntityTeleportEvent.class);
+	}
+
+	private static <E extends Entity, BE extends org.bukkit.entity.Entity, EV extends Event & Cancellable> boolean cantTeleport0(E entity, World toWorld, double toX, double toY, double toZ, ThrowableFunction<? super E, ? extends BE, ?> entityConverter, TriFunction<? super BE, ? super Location, ? super Location, ? extends EV> eventConstuctor, Class<? extends EV> eventClass)
+	{
+		try
+		{
+			BE bukkitEntity = entityConverter.apply(entity);
+			Location from = bukkitEntity.getLocation();
+			Location to = new Location(ConvertUtils.toBukkitWorld(toWorld), toX, toY, toZ, from.getYaw(), from.getPitch());
+			EV event = eventConstuctor.apply(bukkitEntity, from, to);
+			Bukkit.getPluginManager().callEvent(event);
+			return event.isCancelled();
+		}
+		catch (Throwable throwable)
+		{
+			EventHelper.error(throwable, "Failed call {}: [Entity: {}, ToWorld: {}, ToX: {}, ToY: {}, ToZ: {}]", eventClass.getSimpleName(), String.valueOf(entity), toWorld.getWorldInfo().getWorldName(), toX, toY, toZ);
+			return true;
+		}
+	}
+
+	private static <E extends Entity, BE extends org.bukkit.entity.Entity, EV extends Event & Cancellable> boolean cantTeleport0(E entity, World fromWorld, double fromX, double fromY, double fromZ, World toWorld, double toX, double toY, double toZ, ThrowableFunction<? super E, ? extends BE, ?> entityConverter, TriFunction<? super BE, ? super Location, ? super Location, ? extends EV> eventConstuctor, Class<? extends EV> eventClass)
+	{
+		try
+		{
+			BE bukkitEntity = entityConverter.apply(entity);
+			Location entityLocation = bukkitEntity.getLocation();
+			Location from = new Location(ConvertUtils.toBukkitWorld(fromWorld), fromX, fromY, fromZ, entityLocation.getYaw(), entityLocation.getPitch());
+			Location to = new Location(ConvertUtils.toBukkitWorld(toWorld), toX, toY, toZ, from.getYaw(), from.getPitch());
+			EV event = eventConstuctor.apply(bukkitEntity, from, to);
+			Bukkit.getPluginManager().callEvent(event);
+			return event.isCancelled();
+		}
+		catch (Throwable throwable)
+		{
+			EventHelper.error(throwable, "Failed call {}: [Entity: {}, FromWorld: {}, FromX: {}, FromY: {}, FromZ: {}, ToWorld: {}, ToX: {}, ToY: {}, ToZ: {}]", eventClass.getSimpleName(), String.valueOf(entity), fromWorld.getWorldInfo().getWorldName(), fromX, fromY, fromZ, toWorld.getWorldInfo().getWorldName(), toX, toY, toZ);
 			return true;
 		}
 	}
