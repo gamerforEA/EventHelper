@@ -8,7 +8,9 @@ import cpw.mods.fml.relauncher.ReflectionHelper;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.entity.projectile.EntityThrowable;
+import net.minecraft.network.NetHandlerPlayServer;
 import net.minecraft.potion.Potion;
 import net.minecraft.potion.PotionEffect;
 import net.minecraft.server.MinecraftServer;
@@ -72,6 +74,26 @@ public final class FastUtils
 		}
 
 		return false;
+	}
+
+	public static boolean isValidRealPlayer(@Nullable EntityPlayer player)
+	{
+		return isValidRealPlayer(player, true);
+	}
+
+	public static boolean isValidRealPlayer(@Nullable EntityPlayer player, boolean checkAlive)
+	{
+		if (player == null || player instanceof FakePlayer)
+			return false;
+
+		if (player instanceof EntityPlayerMP)
+		{
+			NetHandlerPlayServer connection = ((EntityPlayerMP) player).playerNetServerHandler;
+			if (connection == null || !connection.func_147362_b().isChannelOpen())
+				return false;
+		}
+
+		return !checkAlive || player.isEntityAlive();
 	}
 
 	@Nonnull
