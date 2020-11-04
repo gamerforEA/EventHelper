@@ -25,7 +25,7 @@ apply plugin: 'forge'
 
 [compileJava, compileTestJava]*.options*.encoding = 'UTF-8'
 
-version = "1.7.10-1.12"
+version = "1.7.10-1.13"
 group= "com.gamerforea"
 archivesBaseName = "EventHelper"
 
