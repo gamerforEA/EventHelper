@@ -61,6 +61,7 @@ public final class ItemBlockList
 
 	public boolean isEmpty()
 	{
+		this.load();
 		return this.items.isEmpty() && this.blocks.isEmpty();
 	}
 
