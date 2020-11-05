@@ -20,7 +20,7 @@ repositories {
     }
 }
 
-version = "1.12.2-2.8"
+version = "1.12.2-2.8.1"
 group= "com.gamerforea"
 archivesBaseName = "EventHelper"
 
